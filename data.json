@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "updated": "2026-08-26T10:15:00-04:00",
+  "days": {
+    "2026-08-26": {
+      "nick": { "framed": 6, "oneframe": null, "title": 6, "poster": 5 },
+      "david": { "framed": null, "oneframe": null, "title": null, "poster": 1 },
+      "nate": { "framed": null, "oneframe": null, "title": null, "poster": 4 }
+    }
+  }
+}

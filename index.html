@@ -244,6 +244,7 @@
   .rules { font-size: 13px; color: var(--muted); max-width: 62ch; }
   .alltime { font-size: 13px; color: var(--muted); margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
   .alltime b { color: var(--ink); }
+  .reponote { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
   .data-actions { display: flex; gap: 8px; }
   .data-actions button { font-size: 12px; padding: 6px 10px; color: var(--muted); }
 
@@ -306,6 +307,7 @@
     A skipped mode counts as a fail. Daily tiebreakers: more modes solved, then best single mode, then it's a tie.
     Daily wins are bragging rights; the weekly running total is the title.</p>
     <p class="alltime" id="alltime"></p>
+    <p class="reponote" id="repoNote"></p>
     <div class="data-actions">
       <button id="exportBtn">Export data</button>
       <button id="importBtn">Import data</button>
@@ -610,7 +612,29 @@
     renderWinner();
     renderWeek();
     renderAllTime();
+    $("repoNote").textContent = repoInfo
+      ? "Shared scoreboard: " + repoInfo.days + (repoInfo.days === 1 ? " day" : " days") +
+        " loaded from the repo" + (repoInfo.updated ? " (published " + repoInfo.updated.slice(0, 10) + ")" : "") +
+        ". Export data + save-scores.sh publishes new entries for everyone."
+      : "";
   }
+
+  // ----- shared scoreboard: data.json committed in the repo is the source of truth. -----
+  // Days it contains overwrite local copies of the same day; unpublished local days survive.
+  var repoInfo = null;
+  function applyRemote(remote) {
+    if (!remote || typeof remote.days !== "object") return;
+    Object.keys(remote.days).forEach(function (iso) { data.days[iso] = remote.days[iso]; });
+    repoInfo = { days: Object.keys(remote.days).length, updated: remote.updated || null };
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
+    render();
+  }
+  try {
+    fetch("data.json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(applyRemote)
+      .catch(function () {}); // no data.json (or offline): local storage still works
+  } catch (e) {}
 
   var tickTimer = null;
   function flashTick(msg) {
