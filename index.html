@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gold or Grave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #131518;
+    --panel: #1b1e23;
+    --panel2: #22262d;
+    --line: #2c313a;
+    --ink: #edeef1;
+    --muted: #99a0ac;
+    --gold: #e6b355;
+    --silver: #c2cad6;
+    --bronze: #c8834c;
+    --trash: #9aa36b;
+    --fire: #e06a3d;
+    --grave: #878e9b;
+    --fail: #d9565e;
+    --darkink: #15161a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 48px; }
+
+  /* ---------- header ---------- */
+  header { text-align: center; padding: 20px 0 24px; }
+  .film {
+    height: 14px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: repeating-linear-gradient(90deg,
+      transparent 0 7px, var(--line) 7px 17px, transparent 17px 24px);
+    margin: 0 auto;
+    max-width: 560px;
+  }
+  .eyebrow {
+    margin: 18px 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    margin: 0;
+    font-family: "Anton", "Archivo", sans-serif;
+    font-weight: 400;
+    font-size: clamp(44px, 9vw, 76px);
+    line-height: 1.05;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  h1 .g { color: var(--gold); }
+  h1 .or { color: var(--muted); font-size: 0.55em; vertical-align: middle; padding: 0 0.15em; }
+  h1 .v { color: var(--grave); }
+  .ladder {
+    margin: 10px auto 18px;
+    font-family: "Anton", "Archivo", sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px;
+  }
+  .ladder b { font-weight: 400; }
+  .t-gold { color: var(--gold); } .t-silver { color: var(--silver); }
+  .t-bronze { color: var(--bronze); } .t-trash { color: var(--trash); }
+  .t-fire { color: var(--fire); } .t-grave { color: var(--grave); }
+  .t-fail { color: var(--fail); }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 28px; }
+  .sec-head {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 10px; margin-bottom: 14px;
+  }
+  h2 {
+    margin: 0;
+    font-family: "Anton", "Archivo", sans-serif;
+    font-weight: 400;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  h2 small { color: var(--muted); font-size: 13px; letter-spacing: 0.1em; }
+
+  .controls { display: flex; align-items: center; gap: 6px; }
+  .controls button, .actions button, .data-actions button {
+    font: inherit; font-weight: 600; font-size: 13px;
+    color: var(--ink);
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  .controls button:hover, .actions button:hover, .data-actions button:hover { border-color: var(--muted); }
+  .controls input[type="date"] {
+    font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--ink);
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 8px;
+    color-scheme: dark;
+  }
+  button:focus-visible, input:focus-visible, tr.clickable:focus-visible {
+    outline: 2px solid var(--gold); outline-offset: 2px;
+  }
+
+  /* ---------- player cards ---------- */
+  .players {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 14px;
+  }
+  .pcard {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 14px 10px;
+  }
+  .pcard-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px; margin-bottom: 10px;
+  }
+  .pname {
+    font-family: "Anton", "Archivo", sans-serif;
+    font-size: 20px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .psub { font-size: 12px; color: var(--muted); margin-left: 8px; }
+  .ptotal {
+    font-family: "Anton", "Archivo", sans-serif;
+    font-size: 30px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ptotal.neg { color: var(--fail); }
+  .ptotal.pos { color: var(--ink); }
+  .prow { padding: 6px 0 8px; }
+  .prow + .prow { border-top: 1px dashed var(--line); }
+  .prow-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .mname { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .rpts { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .seg { display: flex; gap: 4px; }
+  .seg button {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 36px;
+    font: inherit; font-weight: 700; font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .seg button:hover { border-color: var(--muted); color: var(--ink); }
+  .seg button[aria-pressed="true"] { color: var(--darkink); border-color: transparent; }
+  .seg button.on-1 { background: var(--gold); }
+  .seg button.on-2 { background: var(--silver); }
+  .seg button.on-3 { background: var(--bronze); }
+  .seg button.on-4 { background: var(--trash); }
+  .seg button.on-5 { background: var(--fire); }
+  .seg button.on-6 { background: var(--grave); }
+  .seg button.on-F { background: var(--fail); color: #fff; }
+
+  /* ---------- day footer ---------- */
+  .day-foot {
+    margin-top: 14px;
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 10px;
+  }
+  .winner { font-size: 15px; font-weight: 600; min-height: 1.5em; }
+  .winner .why { color: var(--muted); font-weight: 400; }
+  .actions { display: flex; align-items: center; gap: 8px; }
+  .tick { font-size: 12px; color: var(--trash); font-weight: 600; min-width: 60px; }
+
+  /* ---------- weekly ---------- */
+  .standings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .scard {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .scard.lead { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+  .rank {
+    font-family: "Anton", "Archivo", sans-serif;
+    font-size: 15px; color: var(--muted); width: 34px; flex: none;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .scard.lead .rank { color: var(--gold); }
+  .sname {
+    font-family: "Anton", "Archivo", sans-serif;
+    font-size: 19px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .sstat { font-size: 12px; color: var(--muted); }
+  .stotal {
+    margin-left: auto;
+    font-family: "Anton", "Archivo", sans-serif;
+    font-size: 34px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stotal.neg { color: var(--fail); }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); font-variant-numeric: tabular-nums; }
+  th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+  th {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--line);
+  }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr + tr td { border-top: 1px solid var(--line); }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover td { background: var(--panel2); }
+  tr.today td { background: var(--panel2); }
+  td.dim { color: var(--muted); }
+  td.win { font-weight: 700; color: var(--gold); }
+
+  /* ---------- footer ---------- */
+  footer { margin-top: 34px; border-top: 1px solid var(--line); padding-top: 18px; }
+  .rules { font-size: 13px; color: var(--muted); max-width: 62ch; }
+  .alltime { font-size: 13px; color: var(--muted); margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
+  .alltime b { color: var(--ink); }
+  .data-actions { display: flex; gap: 8px; }
+  .data-actions button { font-size: 12px; padding: 6px 10px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .seg button, .controls button, .actions button { transition: border-color 120ms, color 120ms; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="film" aria-hidden="true"></div>
+    <p class="eyebrow">framed.wtf · house rules v2 · the weekly title runs Mon–Sun</p>
+    <h1><span class="g">Gold</span><span class="or">or</span><span class="v">Grave</span></h1>
+    <p class="ladder">
+      <b class="t-gold">Gold 10</b><b class="t-silver">Silver 7</b><b class="t-bronze">Bronze 5</b><b class="t-trash">Trash 3</b><b class="t-fire">Fire 2</b><b class="t-grave">Grave 1</b><b class="t-fail">Fail −2</b>
+    </p>
+    <div class="film" aria-hidden="true"></div>
+  </header>
+
+  <section aria-label="Daily card">
+    <div class="sec-head">
+      <h2>Daily card <small id="dayLabel"></small></h2>
+      <div class="controls">
+        <button id="prevDay" aria-label="Previous day">‹</button>
+        <input type="date" id="datePick" aria-label="Pick a date">
+        <button id="nextDay" aria-label="Next day">›</button>
+        <button id="todayBtn">Today</button>
+      </div>
+    </div>
+    <div class="players" id="players"></div>
+    <div class="day-foot">
+      <div class="winner" id="winnerLine"></div>
+      <div class="actions">
+        <span class="tick" id="saveTick" role="status"></span>
+        <button id="copyBtn">Copy recap</button>
+        <button id="clearBtn">Clear day</button>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Weekly standings">
+    <div class="sec-head">
+      <h2>The weekly title <small id="weekLabel"></small></h2>
+      <div class="controls">
+        <button id="prevWeek" aria-label="Previous week">‹ Week</button>
+        <button id="nextWeek" aria-label="Next week">Week ›</button>
+      </div>
+    </div>
+    <div class="standings" id="standings"></div>
+    <div class="tablewrap">
+      <table id="weekTable" aria-label="Days this week">
+        <thead><tr><th>Day</th><th>Nick</th><th>David</th><th>Nate</th><th>Day win</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p class="rules">A fail is the only way to go negative — a 6 is ugly, but it's still a solve; a fail costs you.
+    A skipped mode counts as a fail. Daily tiebreakers: more modes solved, then best single mode, then it's a tie.
+    Daily wins are bragging rights; the weekly running total is the title.</p>
+    <p class="alltime" id="alltime"></p>
+    <div class="data-actions">
+      <button id="exportBtn">Export data</button>
+      <button id="importBtn">Import data</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ----- rubric (v2). Raw results are stored (1-6 or null); points are always recomputed. -----
+  var PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 2, 6: 1 };
+  var TIER = { 1: "Gold", 2: "Silver", 3: "Bronze", 4: "Trash", 5: "Fire", 6: "Grave" };
+  function points(r) { return PTS[r] !== undefined ? PTS[r] : -2; } // null/undefined/skip = fail = -2
+
+  var MODES = [
+    { id: "framed", name: "Framed" },
+    { id: "oneframe", name: "One Frame" },
+    { id: "title", name: "Title" },
+    { id: "poster", name: "Poster" }
+  ];
+  var PLAYERS = [
+    { id: "nick", name: "Nick" },
+    { id: "david", name: "David" },
+    { id: "nate", name: "Nate" }
+  ];
+
+  var STORE_KEY = "gold-or-grave";
+
+  // ----- storage -----
+  function loadData() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) { var d = JSON.parse(raw); if (d && d.days) return d; }
+    } catch (e) { /* private mode etc. */ }
+    return { version: 2, days: {} };
+  }
+  function saveData() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); flashTick("Saved"); }
+    catch (e) { flashTick("Not saved — storage unavailable"); }
+  }
+
+  var data = loadData();
+  var selected = todayISO();
+
+  // ----- dates -----
+  function todayISO() { return fmtISO(new Date()); }
+  function fmtISO(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function parseISO(iso) {
+    var p = iso.split("-");
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+  function addDays(iso, n) { var d = parseISO(iso); d.setDate(d.getDate() + n); return fmtISO(d); }
+  function mondayOf(iso) { var d = parseISO(iso); var off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); return fmtISO(d); }
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function shortDate(iso) { var d = parseISO(iso); return MON[d.getMonth()] + " " + d.getDate(); }
+  function chatDate(iso) { var d = parseISO(iso); return (d.getMonth() + 1) + "/" + d.getDate(); }
+
+  // ----- scoring -----
+  function dayEntry(iso) { return data.days[iso] || null; }
+  function getResult(iso, pid, mid) {
+    var e = dayEntry(iso);
+    if (!e || !e[pid]) return undefined;      // untouched
+    return e[pid][mid];                        // 1-6, null (fail), or undefined
+  }
+  function playerDay(iso, pid) {
+    var total = 0, solved = 0, best = -2;
+    MODES.forEach(function (m) {
+      var r = getResult(iso, pid, m.id);
+      var p = points(r);
+      total += p;
+      if (PTS[r] !== undefined) solved++;
+      if (p > best) best = p;
+    });
+    return { total: total, solved: solved, best: best };
+  }
+  function dayTouched(iso) {
+    var e = dayEntry(iso);
+    if (!e) return false;
+    return PLAYERS.some(function (pl) {
+      return e[pl.id] && MODES.some(function (m) { return e[pl.id][m.id] !== undefined; });
+    });
+  }
+  // Sort by points, then tiebreakers: more modes solved, then best single mode.
+  function rankPlayers(scores) {
+    return PLAYERS.map(function (pl) {
+      var s = scores[pl.id];
+      return { id: pl.id, name: pl.name, total: s.total, solved: s.solved, best: s.best };
+    }).sort(function (a, b) {
+      return (b.total - a.total) || (b.solved - a.solved) || (b.best - a.best);
+    });
+  }
+  function dayWinner(iso) {
+    var scores = {};
+    PLAYERS.forEach(function (pl) { scores[pl.id] = playerDay(iso, pl.id); });
+    var r = rankPlayers(scores);
+    var a = r[0], b = r[1];
+    if (a.total === b.total && a.solved === b.solved && a.best === b.best) {
+      var tied = r.filter(function (x) { return x.total === a.total && x.solved === a.solved && x.best === a.best; });
+      return { tie: true, tied: tied, ranked: r };
+    }
+    var why = "on points";
+    if (a.total === b.total) {
+      why = a.solved !== b.solved ? "tiebreak: more modes solved" : "tiebreak: best single mode";
+    }
+    return { tie: false, winner: a, why: why, ranked: r };
+  }
+  function weekDays(monISO) {
+    var out = [];
+    for (var i = 0; i < 7; i++) out.push(addDays(monISO, i));
+    return out;
+  }
+  function weekTotals(monISO) {
+    var totals = {}, days = 0;
+    PLAYERS.forEach(function (pl) { totals[pl.id] = 0; });
+    weekDays(monISO).forEach(function (iso) {
+      if (!dayTouched(iso)) return;
+      days++;
+      PLAYERS.forEach(function (pl) { totals[pl.id] += playerDay(iso, pl.id).total; });
+    });
+    return { totals: totals, days: days };
+  }
+
+  // ----- entry mutation -----
+  function setResult(iso, pid, mid, val) { // val: 1-6, null (explicit fail), or undefined (unset)
+    if (!data.days[iso]) data.days[iso] = {};
+    if (!data.days[iso][pid]) data.days[iso][pid] = {};
+    if (val === undefined) delete data.days[iso][pid][mid];
+    else data.days[iso][pid][mid] = val;
+    if (!dayTouched(iso)) delete data.days[iso];
+    saveData();
+    render();
+  }
+
+  // ----- render -----
+  var $ = function (id) { return document.getElementById(id); };
+
+  function signed(n) { return (n >= 0 ? "+" : "−") + Math.abs(n); }
+  function plain(n) { return n < 0 ? "−" + Math.abs(n) : String(n); }
+
+  function renderPlayers() {
+    var host = $("players");
+    host.innerHTML = "";
+    PLAYERS.forEach(function (pl) {
+      var s = playerDay(selected, pl.id);
+      var card = document.createElement("div");
+      card.className = "pcard";
+
+      var head = document.createElement("div");
+      head.className = "pcard-head";
+      head.innerHTML = '<span><span class="pname">' + pl.name + '</span>' +
+        '<span class="psub">' + s.solved + "/4 solved</span></span>";
+      var tot = document.createElement("span");
+      tot.className = "ptotal " + (s.total < 0 ? "neg" : "pos");
+      tot.textContent = plain(s.total);
+      head.appendChild(tot);
+      card.appendChild(head);
+
+      MODES.forEach(function (m) {
+        var r = getResult(selected, pl.id, m.id);
+        var row = document.createElement("div");
+        row.className = "prow";
+
+        var top = document.createElement("div");
+        top.className = "prow-top";
+        var label = '<span class="mname">' + m.name + "</span>";
+        var readout = "";
+        if (r === undefined) readout = '<span class="rpts" style="color:var(--muted)">skip = fail −2</span>';
+        else if (r === null) readout = '<span class="rpts t-fail">Fail −2</span>';
+        else readout = '<span class="rpts t-' + TIER[r].toLowerCase() + '">' + TIER[r] + " +" + PTS[r] + "</span>";
+        top.innerHTML = label + readout;
+        row.appendChild(top);
+
+        var seg = document.createElement("div");
+        seg.className = "seg";
+        [1, 2, 3, 4, 5, 6, "F"].forEach(function (v) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = v === "F" ? "✕" : v;
+          var isOn = (v === "F" && r === null) || (v === r);
+          btn.setAttribute("aria-pressed", isOn ? "true" : "false");
+          btn.setAttribute("aria-label", pl.name + " " + m.name + " " + (v === "F" ? "fail" : "guess " + v));
+          if (isOn) btn.className = "on-" + v;
+          btn.addEventListener("click", function () {
+            var next = isOn ? undefined : (v === "F" ? null : v);
+            setResult(selected, pl.id, m.id, next);
+          });
+          seg.appendChild(btn);
+        });
+        row.appendChild(seg);
+        card.appendChild(row);
+      });
+
+      host.appendChild(card);
+    });
+  }
+
+  function renderWinner() {
+    var el = $("winnerLine");
+    if (!dayTouched(selected)) { el.innerHTML = '<span class="why">No results entered for this day yet.</span>'; return; }
+    var w = dayWinner(selected);
+    if (w.tie) {
+      var names = w.tied.map(function (x) { return x.name; }).join(" & ");
+      el.innerHTML = "🤝 Dead tie: " + names + ' <span class="why">(' + plain(w.tied[0].total) + " pts, same modes solved, same best mode)</span>";
+    } else {
+      el.innerHTML = "👑 " + w.winner.name + " takes the day — " + plain(w.winner.total) +
+        ' pts <span class="why">(' + w.why + ")</span>";
+    }
+  }
+
+  function renderWeek() {
+    var mon = mondayOf(selected);
+    var sun = addDays(mon, 6);
+    $("weekLabel").textContent = shortDate(mon) + " – " + shortDate(sun);
+
+    var wt = weekTotals(mon);
+    var ranked = PLAYERS.map(function (pl) {
+      return { id: pl.id, name: pl.name, total: wt.totals[pl.id] };
+    }).sort(function (a, b) { return b.total - a.total; });
+
+    var host = $("standings");
+    host.innerHTML = "";
+    var ords = ["1st", "2nd", "3rd"];
+    ranked.forEach(function (p, i) {
+      var isLead = wt.days > 0 && i === 0 && p.total > ranked[1].total;
+      var card = document.createElement("div");
+      card.className = "scard" + (isLead ? " lead" : "");
+      var tied = i > 0 && p.total === ranked[i - 1].total;
+      card.innerHTML =
+        '<span class="rank">' + (wt.days === 0 ? "—" : (tied ? "T-" + ords[i - 1] : ords[i])) + "</span>" +
+        "<span><span class=\"sname\">" + p.name + "</span><br>" +
+        '<span class="sstat">' + (isLead ? "holding the title 👑" : "&nbsp;") + "</span></span>" +
+        '<span class="stotal' + (p.total < 0 ? " neg" : "") + '">' + plain(p.total) + "</span>";
+      host.appendChild(card);
+    });
+
+    var tb = $("weekTable").querySelector("tbody");
+    tb.innerHTML = "";
+    weekDays(mon).forEach(function (iso) {
+      var tr = document.createElement("tr");
+      tr.className = "clickable" + (iso === selected ? " today" : "");
+      tr.tabIndex = 0;
+      var d = parseISO(iso);
+      var cells = '<td>' + DOW[d.getDay()] + " " + d.getDate() + "</td>";
+      if (dayTouched(iso)) {
+        var w = dayWinner(iso);
+        PLAYERS.forEach(function (pl) {
+          var t = playerDay(iso, pl.id).total;
+          var isWin = !w.tie && w.winner.id === pl.id;
+          cells += '<td class="' + (isWin ? "win" : "") + '">' + plain(t) + "</td>";
+        });
+        cells += '<td class="dim">' + (w.tie ? "tie" : "👑 " + w.winner.name) + "</td>";
+      } else {
+        cells += '<td class="dim">–</td><td class="dim">–</td><td class="dim">–</td><td class="dim"></td>';
+      }
+      tr.innerHTML = cells;
+      var go = function () { selected = iso; render(); };
+      tr.addEventListener("click", go);
+      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderAllTime() {
+    var days = Object.keys(data.days).filter(dayTouched).sort();
+    if (!days.length) { $("alltime").textContent = ""; return; }
+    var totals = {}, titles = {};
+    PLAYERS.forEach(function (pl) { totals[pl.id] = 0; titles[pl.id] = 0; });
+    var weeks = {};
+    days.forEach(function (iso) {
+      PLAYERS.forEach(function (pl) { totals[pl.id] += playerDay(iso, pl.id).total; });
+      weeks[mondayOf(iso)] = true;
+    });
+    var curMon = mondayOf(todayISO());
+    Object.keys(weeks).forEach(function (mon) {
+      if (mon >= curMon) return; // only finished weeks award a title
+      var wt = weekTotals(mon);
+      var best = -Infinity, winner = null, shared = false;
+      PLAYERS.forEach(function (pl) {
+        var t = wt.totals[pl.id];
+        if (t > best) { best = t; winner = pl.id; shared = false; }
+        else if (t === best) shared = true;
+      });
+      if (winner && !shared) titles[winner]++;
+    });
+    var parts = PLAYERS.map(function (pl) { return "<b>" + pl.name + "</b> " + plain(totals[pl.id]); }).join(" · ");
+    var tparts = PLAYERS.filter(function (pl) { return titles[pl.id] > 0; })
+      .map(function (pl) { return pl.name + " 👑×" + titles[pl.id]; }).join(" · ");
+    $("alltime").innerHTML = "All-time (" + days.length + (days.length === 1 ? " day" : " days") + "): " + parts +
+      (tparts ? " &nbsp;·&nbsp; Weekly titles: " + tparts : "");
+  }
+
+  function render() {
+    var d = parseISO(selected);
+    $("datePick").value = selected;
+    $("dayLabel").textContent = DOW[d.getDay()] + " " + shortDate(selected);
+    renderPlayers();
+    renderWinner();
+    renderWeek();
+    renderAllTime();
+  }
+
+  var tickTimer = null;
+  function flashTick(msg) {
+    var el = $("saveTick");
+    el.textContent = msg;
+    clearTimeout(tickTimer);
+    tickTimer = setTimeout(function () { el.textContent = ""; }, 1600);
+  }
+
+  // ----- recap for the group chat -----
+  function buildRecap() {
+    var scores = {};
+    PLAYERS.forEach(function (pl) { scores[pl.id] = playerDay(selected, pl.id); });
+    var w = dayWinner(selected);
+    var lines = ["Framed " + chatDate(selected) + " — Gold or Grave"];
+    w.ranked.forEach(function (p) {
+      var parts = MODES.map(function (m) {
+        var pts = points(getResult(selected, p.id, m.id));
+        return (pts >= 0 ? "+" : "") + pts;
+      });
+      var crown = (!w.tie && w.winner.id === p.id) ? " 👑" : "";
+      lines.push(p.name + ": " + parts.join(" ") + " = " + p.total + crown);
+    });
+    var mon = mondayOf(selected);
+    var wt = weekTotals(mon);
+    var wp = PLAYERS.map(function (pl) { return { name: pl.name, t: wt.totals[pl.id] }; })
+      .sort(function (a, b) { return b.t - a.t; })
+      .map(function (p) { return p.name + " " + p.t; }).join(" · ");
+    lines.push("Week so far: " + wp);
+    return lines.join("\n");
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { flashTick("Copied"); },
+        function () { window.prompt("Copy the recap:", text); }
+      );
+    } else {
+      window.prompt("Copy the recap:", text);
+    }
+  }
+
+  // ----- wiring -----
+  $("datePick").addEventListener("change", function () { if (this.value) { selected = this.value; render(); } });
+  $("prevDay").addEventListener("click", function () { selected = addDays(selected, -1); render(); });
+  $("nextDay").addEventListener("click", function () { selected = addDays(selected, 1); render(); });
+  $("todayBtn").addEventListener("click", function () { selected = todayISO(); render(); });
+  $("prevWeek").addEventListener("click", function () { selected = addDays(selected, -7); render(); });
+  $("nextWeek").addEventListener("click", function () { selected = addDays(selected, 7); render(); });
+  $("copyBtn").addEventListener("click", function () {
+    if (!dayTouched(selected)) { flashTick("Nothing to copy"); return; }
+    copyText(buildRecap());
+  });
+  $("clearBtn").addEventListener("click", function () {
+    if (!dayTouched(selected)) return;
+    if (window.confirm("Clear all results for " + shortDate(selected) + "?")) {
+      delete data.days[selected];
+      saveData();
+      render();
+    }
+  });
+  $("exportBtn").addEventListener("click", function () { copyText(JSON.stringify(data)); });
+  $("importBtn").addEventListener("click", function () {
+    var raw = window.prompt("Paste exported data (this replaces what's on this device):");
+    if (!raw) return;
+    try {
+      var d = JSON.parse(raw);
+      if (!d || typeof d.days !== "object") throw new Error("bad shape");
+      data = { version: 2, days: d.days };
+      saveData();
+      render();
+    } catch (e) { window.alert("That didn't look like exported Gold or Grave data."); }
+  });
+
+  render();
+})();
+</script>
+</html>
