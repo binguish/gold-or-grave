@@ -75,3 +75,4 @@ Use this row set as the fixture for any scoring tests.
 - Store raw results (guess number or null), never stored points — recompute so the rubric can change without migrating data.
 - Any rubric change bumps the version (v3, v4…) and gets appended to the "Rejected / alternative" list above with the reason, so the same argument doesn't happen twice.
 - Players: `nick`, `david`, `nate`. David also answers to Dave.
+- The scoreboard app is called **The Box Office** (renamed from "Gold or Grave" 2026-08-26). Scores DISPLAY as box-office millions ($4M, −$3M "in the red") purely as flavor — the points and stored raw guesses are unchanged. Weekly total is "the weekly gross."

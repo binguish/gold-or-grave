@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gold or Grave</title>
+<title>The Box Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap">
@@ -256,17 +256,17 @@
 <div class="wrap">
   <header>
     <div class="film" aria-hidden="true"></div>
-    <p class="eyebrow">framed.wtf · house rules v2 · the weekly title runs Mon–Sun</p>
-    <h1><span class="g">Gold</span><span class="or">or</span><span class="v">Grave</span></h1>
+    <p class="eyebrow">framed.wtf · house rules v2 · the weekly gross runs Mon–Sun</p>
+    <h1><span class="or">The</span> <span class="g">Box</span> <span class="v">Office</span></h1>
     <p class="ladder">
-      <b class="t-gold">Gold 10</b><b class="t-silver">Silver 7</b><b class="t-bronze">Bronze 5</b><b class="t-trash">Trash 3</b><b class="t-fire">Dumpster Fire 2</b><b class="t-grave">Grave 1</b><b class="t-fail">Fail −2</b>
+      <b class="t-gold">Gold $10M</b><b class="t-silver">Silver $7M</b><b class="t-bronze">Bronze $5M</b><b class="t-trash">Trash $3M</b><b class="t-fire">Dumpster Fire $2M</b><b class="t-grave">Grave $1M</b><b class="t-fail">Fail −$2M</b>
     </p>
     <div class="film" aria-hidden="true"></div>
   </header>
 
   <section aria-label="Daily card">
     <div class="sec-head">
-      <h2>Daily card <small id="dayLabel"></small></h2>
+      <h2>The daily numbers <small id="dayLabel"></small></h2>
       <div class="controls">
         <button id="prevDay" aria-label="Previous day">‹</button>
         <input type="date" id="datePick" aria-label="Pick a date">
@@ -287,7 +287,7 @@
 
   <section aria-label="Weekly standings">
     <div class="sec-head">
-      <h2>The weekly title <small id="weekLabel"></small></h2>
+      <h2>The weekly gross <small id="weekLabel"></small></h2>
       <div class="controls">
         <button id="prevWeek" aria-label="Previous week">‹ Week</button>
         <button id="nextWeek" aria-label="Next week">Week ›</button>
@@ -303,9 +303,9 @@
   </section>
 
   <footer>
-    <p class="rules">A fail is the only way to go negative — a 6 is ugly, but it's still a solve; a fail costs you.
+    <p class="rules">A fail is the only way to go into the red — a 6 is ugly, but it still sells tickets; a fail loses money.
     A skipped mode counts as a fail. Daily tiebreakers: more modes solved, then best single mode, then it's a tie.
-    Daily wins are bragging rights; the weekly running total is the title.</p>
+    Daily wins are bragging rights; the weekly gross is the title.</p>
     <p class="alltime" id="alltime"></p>
     <p class="reponote" id="repoNote"></p>
     <div class="data-actions">
@@ -450,8 +450,10 @@
   // ----- render -----
   var $ = function (id) { return document.getElementById(id); };
 
-  function signed(n) { return (n >= 0 ? "+" : "−") + Math.abs(n); }
-  function plain(n) { return n < 0 ? "−" + Math.abs(n) : String(n); }
+  // scores display as box-office millions; the stored data stays raw guesses
+  function money(n) { return (n < 0 ? "−$" : "$") + Math.abs(n) + "M"; }
+  function moneyChat(n) { return (n < 0 ? "-$" : "$") + Math.abs(n) + "M"; }       // ASCII minus for group chat
+  function moneySignedChat(n) { return (n >= 0 ? "+$" : "-$") + Math.abs(n) + "M"; }
 
   function renderPlayers() {
     var host = $("players");
@@ -467,7 +469,7 @@
         '<span class="psub">' + s.solved + "/4 solved</span></span>";
       var tot = document.createElement("span");
       tot.className = "ptotal " + (s.total < 0 ? "neg" : "pos");
-      tot.textContent = plain(s.total);
+      tot.textContent = money(s.total);
       head.appendChild(tot);
       card.appendChild(head);
 
@@ -480,9 +482,9 @@
         top.className = "prow-top";
         var label = '<span class="mname">' + m.name + "</span>";
         var readout = "";
-        if (r === undefined) readout = '<span class="rpts" style="color:var(--muted)">skip = fail −2</span>';
-        else if (r === null) readout = '<span class="rpts t-fail">Fail −2</span>';
-        else readout = '<span class="rpts t-' + TIERC[r] + '">' + TIER[r] + " +" + PTS[r] + "</span>";
+        if (r === undefined) readout = '<span class="rpts" style="color:var(--muted)">skip = fail −$2M</span>';
+        else if (r === null) readout = '<span class="rpts t-fail">Fail −$2M</span>';
+        else readout = '<span class="rpts t-' + TIERC[r] + '">' + TIER[r] + " +$" + PTS[r] + "M</span>";
         top.innerHTML = label + readout;
         row.appendChild(top);
 
@@ -516,10 +518,10 @@
     var w = dayWinner(selected);
     if (w.tie) {
       var names = w.tied.map(function (x) { return x.name; }).join(" & ");
-      el.innerHTML = "🤝 Dead tie: " + names + ' <span class="why">(' + plain(w.tied[0].total) + " pts, same modes solved, same best mode)</span>";
+      el.innerHTML = "🤝 Dead heat: " + names + ' <span class="why">(' + money(w.tied[0].total) + ", same modes solved, same best mode)</span>";
     } else {
-      el.innerHTML = "👑 " + w.winner.name + " takes the day — " + plain(w.winner.total) +
-        ' pts <span class="why">(' + w.why + ")</span>";
+      el.innerHTML = "👑 " + w.winner.name + " tops the box office — " + money(w.winner.total) +
+        ' <span class="why">(' + w.why + ")</span>";
     }
   }
 
@@ -545,7 +547,7 @@
         '<span class="rank">' + (wt.days === 0 ? "—" : (tied ? "T-" + ords[i - 1] : ords[i])) + "</span>" +
         "<span><span class=\"sname\">" + p.name + "</span><br>" +
         '<span class="sstat">' + (isLead ? "holding the title 👑" : "&nbsp;") + "</span></span>" +
-        '<span class="stotal' + (p.total < 0 ? " neg" : "") + '">' + plain(p.total) + "</span>";
+        '<span class="stotal' + (p.total < 0 ? " neg" : "") + '">' + money(p.total) + "</span>";
       host.appendChild(card);
     });
 
@@ -562,7 +564,7 @@
         PLAYERS.forEach(function (pl) {
           var t = playerDay(iso, pl.id).total;
           var isWin = !w.tie && w.winner.id === pl.id;
-          cells += '<td class="' + (isWin ? "win" : "") + '">' + plain(t) + "</td>";
+          cells += '<td class="' + (isWin ? "win" : "") + '">' + money(t) + "</td>";
         });
         cells += '<td class="dim">' + (w.tie ? "tie" : "👑 " + w.winner.name) + "</td>";
       } else {
@@ -598,7 +600,7 @@
       });
       if (winner && !shared) titles[winner]++;
     });
-    var parts = PLAYERS.map(function (pl) { return "<b>" + pl.name + "</b> " + plain(totals[pl.id]); }).join(" · ");
+    var parts = PLAYERS.map(function (pl) { return "<b>" + pl.name + "</b> " + money(totals[pl.id]); }).join(" · ");
     var tparts = PLAYERS.filter(function (pl) { return titles[pl.id] > 0; })
       .map(function (pl) { return pl.name + " 👑×" + titles[pl.id]; }).join(" · ");
     $("alltime").innerHTML = "All-time (" + days.length + (days.length === 1 ? " day" : " days") + "): " + parts +
@@ -650,20 +652,20 @@
     var scores = {};
     PLAYERS.forEach(function (pl) { scores[pl.id] = playerDay(selected, pl.id); });
     var w = dayWinner(selected);
-    var lines = ["Framed " + chatDate(selected) + " — Gold or Grave"];
+    var lines = ["Framed " + chatDate(selected) + " — The Box Office"];
     w.ranked.forEach(function (p) {
       var parts = MODES.map(function (m) {
         var pts = points(getResult(selected, p.id, m.id));
-        return (pts >= 0 ? "+" : "") + pts;
+        return moneySignedChat(pts);
       });
       var crown = (!w.tie && w.winner.id === p.id) ? " 👑" : "";
-      lines.push(p.name + ": " + parts.join(" ") + " = " + p.total + crown);
+      lines.push(p.name + ": " + parts.join(" ") + " = " + moneyChat(p.total) + crown);
     });
     var mon = mondayOf(selected);
     var wt = weekTotals(mon);
     var wp = PLAYERS.map(function (pl) { return { name: pl.name, t: wt.totals[pl.id] }; })
       .sort(function (a, b) { return b.t - a.t; })
-      .map(function (p) { return p.name + " " + p.t; }).join(" · ");
+      .map(function (p) { return p.name + " " + moneyChat(p.t); }).join(" · ");
     lines.push("Week so far: " + wp);
     return lines.join("\n");
   }
@@ -707,7 +709,7 @@
       data = { version: 2, days: d.days };
       saveData();
       render();
-    } catch (e) { window.alert("That didn't look like exported Gold or Grave data."); }
+    } catch (e) { window.alert("That didn't look like an export from The Box Office."); }
   });
 
   render();
