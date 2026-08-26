@@ -259,7 +259,7 @@
     <p class="eyebrow">framed.wtf · house rules v2 · the weekly title runs Mon–Sun</p>
     <h1><span class="g">Gold</span><span class="or">or</span><span class="v">Grave</span></h1>
     <p class="ladder">
-      <b class="t-gold">Gold 10</b><b class="t-silver">Silver 7</b><b class="t-bronze">Bronze 5</b><b class="t-trash">Trash 3</b><b class="t-fire">Fire 2</b><b class="t-grave">Grave 1</b><b class="t-fail">Fail −2</b>
+      <b class="t-gold">Gold 10</b><b class="t-silver">Silver 7</b><b class="t-bronze">Bronze 5</b><b class="t-trash">Trash 3</b><b class="t-fire">Dumpster Fire 2</b><b class="t-grave">Grave 1</b><b class="t-fail">Fail −2</b>
     </p>
     <div class="film" aria-hidden="true"></div>
   </header>
@@ -321,7 +321,8 @@
 
   // ----- rubric (v2). Raw results are stored (1-6 or null); points are always recomputed. -----
   var PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 2, 6: 1 };
-  var TIER = { 1: "Gold", 2: "Silver", 3: "Bronze", 4: "Trash", 5: "Fire", 6: "Grave" };
+  var TIER = { 1: "Gold", 2: "Silver", 3: "Bronze", 4: "Trash", 5: "Dumpster Fire", 6: "Grave" };
+  var TIERC = { 1: "gold", 2: "silver", 3: "bronze", 4: "trash", 5: "fire", 6: "grave" }; // CSS class slugs
   function points(r) { return PTS[r] !== undefined ? PTS[r] : -2; } // null/undefined/skip = fail = -2
 
   var MODES = [
@@ -481,7 +482,7 @@
         var readout = "";
         if (r === undefined) readout = '<span class="rpts" style="color:var(--muted)">skip = fail −2</span>';
         else if (r === null) readout = '<span class="rpts t-fail">Fail −2</span>';
-        else readout = '<span class="rpts t-' + TIER[r].toLowerCase() + '">' + TIER[r] + " +" + PTS[r] + "</span>";
+        else readout = '<span class="rpts t-' + TIERC[r] + '">' + TIER[r] + " +" + PTS[r] + "</span>";
         top.innerHTML = label + readout;
         row.appendChild(top);
 

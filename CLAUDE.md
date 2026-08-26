@@ -25,7 +25,7 @@ Everyone plays the same puzzles, so the "poster is readable by guess 6" advantag
 | 2        | Silver | 7      |
 | 3        | Bronze | 5      |
 | 4        | Trash  | 3      |
-| 5        | Fire   | 2      |
+| 5        | Dumpster Fire | 2 |
 | 6        | Grave  | 1      |
 | Fail     | —      | -2     |
 
@@ -71,7 +71,7 @@ Use this row set as the fixture for any scoring tests.
 
 ## Conventions for this repo
 
-- Use the tier names (Gold/Silver/Bronze/Trash/Fire/Grave/Fail) in UI copy; use the numbers in data.
+- Use the tier names (Gold/Silver/Bronze/Trash/Dumpster Fire/Grave/Fail) in UI copy; use the numbers in data. ("Fire" was renamed Dumpster Fire 2026-08-26 — plain "fire" sounded like a good thing.)
 - Store raw results (guess number or null), never stored points — recompute so the rubric can change without migrating data.
 - Any rubric change bumps the version (v3, v4…) and gets appended to the "Rejected / alternative" list above with the reason, so the same argument doesn't happen twice.
 - Players: `nick`, `david`, `nate`. David also answers to Dave.
