@@ -108,6 +108,8 @@
     cursor: pointer;
   }
   .controls button:hover, .actions button:hover, .data-actions button:hover { border-color: var(--muted); }
+  .actions button.primary { background: var(--gold); border-color: var(--gold); color: var(--darkink); }
+  .actions button.primary:hover { border-color: var(--ink); }
   .controls input[type="date"] {
     font: inherit; font-size: 13px; font-weight: 600;
     color: var(--ink);
@@ -256,7 +258,7 @@
 <div class="wrap">
   <header>
     <div class="film" aria-hidden="true"></div>
-    <p class="eyebrow">framed.wtf · house rules v2 · the weekly gross runs Mon–Sun</p>
+    <p class="eyebrow">framed.wtf · house rules v2 · the weekly gross runs Mon–Fri</p>
     <h1><span class="or">The</span> <span class="g">Box</span> <span class="v">Office</span></h1>
     <p class="ladder">
       <b class="t-gold">Gold $10M</b><b class="t-silver">Silver $7M</b><b class="t-bronze">Bronze $5M</b><b class="t-trash">Trash $3M</b><b class="t-fire">Dumpster Fire $2M</b><b class="t-grave">Grave $1M</b><b class="t-fail">Fail −$2M</b>
@@ -280,6 +282,7 @@
       <div class="actions">
         <span class="tick" id="saveTick" role="status"></span>
         <button id="copyBtn">Copy recap</button>
+        <button id="publishBtn" class="primary">Publish</button>
         <button id="clearBtn">Clear day</button>
       </div>
     </div>
@@ -350,6 +353,7 @@
   function saveData() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); flashTick("Saved"); }
     catch (e) { flashTick("Not saved — storage unavailable"); }
+    schedulePublish();
   }
 
   var data = loadData();
@@ -420,9 +424,9 @@
     }
     return { tie: false, winner: a, why: why, ranked: r };
   }
-  function weekDays(monISO) {
+  function weekDays(monISO) { // the title runs Mon-Fri; weekends don't count toward the weekly gross
     var out = [];
-    for (var i = 0; i < 7; i++) out.push(addDays(monISO, i));
+    for (var i = 0; i < 5; i++) out.push(addDays(monISO, i));
     return out;
   }
   function weekTotals(monISO) {
@@ -527,8 +531,8 @@
 
   function renderWeek() {
     var mon = mondayOf(selected);
-    var sun = addDays(mon, 6);
-    $("weekLabel").textContent = shortDate(mon) + " – " + shortDate(sun);
+    var fri = addDays(mon, 4);
+    $("weekLabel").textContent = shortDate(mon) + " – " + shortDate(fri);
 
     var wt = weekTotals(mon);
     var ranked = PLAYERS.map(function (pl) {
@@ -588,9 +592,8 @@
       PLAYERS.forEach(function (pl) { totals[pl.id] += playerDay(iso, pl.id).total; });
       weeks[mondayOf(iso)] = true;
     });
-    var curMon = mondayOf(todayISO());
     Object.keys(weeks).forEach(function (mon) {
-      if (mon >= curMon) return; // only finished weeks award a title
+      if (addDays(mon, 4) >= todayISO()) return; // a title is awarded once that week's Friday has passed
       var wt = weekTotals(mon);
       var best = -Infinity, winner = null, shared = false;
       PLAYERS.forEach(function (pl) {
@@ -618,7 +621,7 @@
     $("repoNote").textContent = repoInfo
       ? "Shared scoreboard: " + repoInfo.days + (repoInfo.days === 1 ? " day" : " days") +
         " loaded from the repo" + (repoInfo.updated ? " (published " + repoInfo.updated.slice(0, 10) + ")" : "") +
-        ". Export data + save-scores.sh publishes new entries for everyone."
+        ". Publish pushes this device's entries live for everyone."
       : "";
   }
 
@@ -640,11 +643,75 @@
   } catch (e) {}
 
   var tickTimer = null;
-  function flashTick(msg) {
+  function flashTick(msg, ms) {
     var el = $("saveTick");
     el.textContent = msg;
     clearTimeout(tickTimer);
-    tickTimer = setTimeout(function () { el.textContent = ""; }, 1600);
+    tickTimer = setTimeout(function () { el.textContent = ""; }, ms || 1600);
+  }
+
+  // ----- publishing: commits data.json to the repo via the GitHub API. -----
+  // The token is stored only in this browser (never in the page or the repo);
+  // devices without a token are read-only viewers of the shared scoreboard.
+  var TOKEN_KEY = "gold-or-grave-token";
+  var API_URL = "https://api.github.com/repos/binguish/gold-or-grave/contents/data.json";
+  function ghHeaders(token) {
+    return { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json" };
+  }
+  function getToken(interactive) {
+    var t = null;
+    try { t = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+    if (!t && interactive) {
+      t = window.prompt(
+        "Paste a GitHub token to publish scores from this device.\n\n" +
+        "Create one at github.com/settings/personal-access-tokens → Generate new token (fine-grained):\n" +
+        "  · Repository access: Only select repositories → binguish/gold-or-grave\n" +
+        "  · Repository permissions → Contents → Read and write\n\n" +
+        "The token is saved only in this browser. After that, edits auto-publish.");
+      if (t) { t = t.trim(); try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {} }
+    }
+    return t;
+  }
+  function publish(interactive) {
+    var token = getToken(interactive);
+    if (!token) { if (interactive) flashTick("Publish canceled"); return; }
+    flashTick("Publishing…", 10000);
+    var body = JSON.stringify({ version: 2, updated: new Date().toISOString(), days: data.days }, null, 2);
+    fetch(API_URL, { headers: ghHeaders(token) })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (cur) {
+        return fetch(API_URL, {
+          method: "PUT",
+          headers: ghHeaders(token),
+          body: JSON.stringify({
+            message: "Update scores (" + todayISO() + ")",
+            content: btoa(unescape(encodeURIComponent(body))),
+            sha: cur.sha
+          })
+        });
+      })
+      .then(function (r) {
+        if (r.ok) {
+          repoInfo = { days: Object.keys(data.days).length, updated: new Date().toISOString() };
+          render();
+          flashTick("Published — live for everyone in ~1 min", 5000);
+        } else if (r.status === 401 || r.status === 403) {
+          try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+          flashTick("Token rejected — hit Publish to enter a new one", 5000);
+        } else if (r.status === 409 || r.status === 422) {
+          flashTick("Publish conflict — reload the page and try again", 5000);
+        } else {
+          flashTick("Publish failed (HTTP " + r.status + ")", 5000);
+        }
+      })
+      .catch(function () { flashTick("Publish failed — check your connection", 5000); });
+  }
+  // Auto-publish: once a token is saved, edits push on their own shortly after you stop tapping.
+  var publishTimer = null;
+  function schedulePublish() {
+    if (!getToken(false)) return;
+    clearTimeout(publishTimer);
+    publishTimer = setTimeout(function () { publish(false); }, 120000);
   }
 
   // ----- recap for the group chat -----
@@ -687,6 +754,7 @@
   $("todayBtn").addEventListener("click", function () { selected = todayISO(); render(); });
   $("prevWeek").addEventListener("click", function () { selected = addDays(selected, -7); render(); });
   $("nextWeek").addEventListener("click", function () { selected = addDays(selected, 7); render(); });
+  $("publishBtn").addEventListener("click", function () { publish(true); });
   $("copyBtn").addEventListener("click", function () {
     if (!dayTouched(selected)) { flashTick("Nothing to copy"); return; }
     copyText(buildRecap());

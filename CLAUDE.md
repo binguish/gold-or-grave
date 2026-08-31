@@ -34,7 +34,7 @@ Everyone plays the same puzzles, so the "poster is readable by guess 6" advantag
 - A fail is the only way to score negative. That is deliberate: a 6 is ugly but it is still a solve; a fail costs you.
 - "A solve is a solve." A lucky guess counts. Knowing the movie but not its name does NOT count — the name is the game.
 - Tiebreakers, in order: (1) more modes solved, (2) best single mode, (3) it's a tie.
-- The real competition is the weekly running total (Mon–Sun). Daily wins are bragging rights; weekly is the title.
+- The real competition is the weekly running total (Mon–Fri, the business week — amended from Mon–Sun on 2026-08-31). Weekend days can still be played and count toward all-time, but not toward the weekly title. A title is awarded once that week's Friday has passed.
 
 ```
 def points(result):            # result: 1..6, or None for a fail
@@ -75,4 +75,5 @@ Use this row set as the fixture for any scoring tests.
 - Store raw results (guess number or null), never stored points — recompute so the rubric can change without migrating data.
 - Any rubric change bumps the version (v3, v4…) and gets appended to the "Rejected / alternative" list above with the reason, so the same argument doesn't happen twice.
 - Players: `nick`, `david`, `nate`. David also answers to Dave.
+- Publishing: `data.json` in the repo is the shared scoreboard everyone sees. The page's **Publish** button commits it via the GitHub API using a fine-grained token stored only in the scorekeeper's browser; once a token is saved, edits auto-publish ~2 min after the last tap. Devices without a token are read-only viewers.
 - The scoreboard app is called **The Box Office** (renamed from "Gold or Grave" 2026-08-26). Scores DISPLAY as box-office millions ($4M, −$3M "in the red") purely as flavor — the points and stored raw guesses are unchanged. Weekly total is "the weekly gross."
