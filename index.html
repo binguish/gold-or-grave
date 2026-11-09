@@ -213,12 +213,14 @@
      that much wider and the gate clips it off, so scrolling still works but no bar shows. */
   .gate {
     overflow: hidden;
+    max-width: calc(1068px - var(--sbw, 0px)); /* wider than ~1070px, Framed adds an ad rail and shifts the game right */
+    margin: 0 auto;
     border-radius: 26px / 20px;
     background: #111;
     box-shadow: 0 34px 70px -22px rgba(0, 0, 0, .9), 0 0 90px 6px rgba(64, 86, 140, .28);
   }
   .gate iframe {
-    display: block; width: calc(100% + var(--sbw, 0px)); height: min(82vh, 860px);
+    display: block; width: calc(100% + var(--sbw, 0px)); height: 590px; /* set per mode by sizeGame() */
     border: 0; background: #111;
   }
   .caveat { font-size: 12.5px; color: var(--muted); margin-top: 10px; text-align: center; }
@@ -1047,8 +1049,28 @@
     document.documentElement.style.setProperty("--sbw", (probe.offsetWidth - probe.clientWidth) + "px");
     probe.remove();
   })();
+  // Crop the game just under its archive buttons, so Framed's footer and ad space stay out of view.
+  // Bottom of those buttons in each mode at Framed's three layout widths (<640, 640-767, 768+ px),
+  // measured on framed.wtf 2026-11-09. A finished game grows taller and scrolls inside the frame.
+  const GAME_H = {
+    framed:   [498, 624, 574],
+    oneframe: [462, 584, 534],
+    title:    [492, 628, 578],
+    poster:   [573, 663, 645]
+  };
+  let gameMode = "framed";
+  function sizeGame() {
+    const w = $("game").clientWidth;
+    if (!w) return;
+    const tier = w < 640 ? 0 : w < 768 ? 1 : 2;
+    $("game").style.height = (GAME_H[gameMode][tier] + 14) + "px";
+  }
+  try { new ResizeObserver(sizeGame).observe($("game")); } catch (e) { window.addEventListener("resize", sizeGame); }
+  sizeGame();
   document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+    gameMode = t.id.slice(4);
+    sizeGame();
     $("game").src = t.dataset.src;
   }));
   $("playToggle").addEventListener("click", () => {
