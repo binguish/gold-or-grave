@@ -1,0 +1,1135 @@
+<title>The Box Office</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=League+Gothic&family=Courier+Prime:wght@400;700&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Layout: a cinema front. Lit marquee on top, one paper ticket per player for the day,
+     then the trade-paper weekly chart beside the price board, then lifetime grosses. */
+  :root {
+    --bg: #170b10;
+    --panel: #23111a;
+    --panel-2: #321a24;
+    --line: #4a2a35;
+    --ink: #f8ecdd;
+    --muted: #bea1a8;
+    --accent: #ffc857;
+    --on-accent: #2a1405;
+    --good: #8ed39a;
+    --warn: #ffb35c;
+    --t-gold: #f3c34f; --t-silver: #cfd6e0; --t-bronze: #e09359; --t-trash: #adb871;
+    --t-fire: #f5793f; --t-grave: #9d97a0; --t-fail: #ff6c76;
+    --on-tier: #1c0c12;
+    --shadow: rgba(0, 0, 0, .45);
+    /* the sign is a physical object, so it looks the same in both themes */
+    --sign-frame: #2f0a12; --sign-fascia: #4b0f1b;
+    --bulb: #ffd56f; --bulb-halo: rgba(255, 196, 84, .6);
+    --reader: #fff5dd; --reader-groove: #e6cf9f; --letter: #1d0d0f; --letter-red: #b11e2a;
+    --f-display: "League Gothic", "Arial Narrow", Impact, sans-serif;
+    --f-body: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --f-stamp: "Courier Prime", "Courier New", Courier, monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4ecec; --panel: #fffdfb; --panel-2: #f4e8e9; --line: #e2cdd1;
+      --ink: #2b0f17; --muted: #7b5b63; --accent: #a3620a; --on-accent: #ffffff;
+      --good: #2e7d3c; --warn: #a85b00;
+      --t-gold: #946300; --t-silver: #5b6879; --t-bronze: #a2531e; --t-trash: #5d6a24;
+      --t-fire: #c14714; --t-grave: #6c6670; --t-fail: #c22c3a;
+      --on-tier: #ffffff; --shadow: rgba(60, 20, 30, .18);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4ecec; --panel: #fffdfb; --panel-2: #f4e8e9; --line: #e2cdd1;
+    --ink: #2b0f17; --muted: #7b5b63; --accent: #a3620a; --on-accent: #ffffff;
+    --good: #2e7d3c; --warn: #a85b00;
+    --t-gold: #946300; --t-silver: #5b6879; --t-bronze: #a2531e; --t-trash: #5d6a24;
+    --t-fire: #c14714; --t-grave: #6c6670; --t-fail: #c22c3a;
+    --on-tier: #ffffff; --shadow: rgba(60, 20, 30, .18);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 64px;
+    display: grid;
+    gap: 44px;
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dim { color: var(--muted); }
+  p { margin: 0; }
+
+  /* ---------- marquee ---------- */
+  .marquee {
+    position: relative;
+    padding: 18px;
+    border-radius: 18px;
+    background: var(--sign-frame);
+    box-shadow: 0 24px 60px -30px var(--bulb-halo);
+  }
+  .bulbs { position: absolute; inset: 0; pointer-events: none; }
+  .bulbs i {
+    position: absolute;
+    width: 7px; height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: var(--bulb);
+    box-shadow: 0 0 8px 2px var(--bulb-halo);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bulbs i { animation: chase 1.5s steps(1, end) infinite; }
+    .bulbs i.b1 { animation-delay: -1s; }
+    .bulbs i.b2 { animation-delay: -0.5s; }
+  }
+  @keyframes chase {
+    0% { opacity: 1; }
+    33.34% { opacity: .3; box-shadow: none; }
+  }
+  .fascia {
+    position: relative;
+    background: var(--sign-fascia);
+    border-radius: 10px 10px 0 0;
+    padding: 12px 16px 4px;
+    text-align: center;
+  }
+  .kicker {
+    font-family: var(--f-stamp);
+    font-size: 12px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--bulb);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: clamp(64px, 15vw, 150px);
+    line-height: .92;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bulb);
+    text-shadow: 0 0 22px var(--bulb-halo);
+  }
+  .reader {
+    position: relative;
+    background: var(--reader);
+    border-radius: 0 0 10px 10px;
+    padding: 8px 14px 10px;
+    box-shadow: inset 0 0 50px rgba(255, 214, 140, .55);
+    display: grid;
+  }
+  .rb {
+    font-family: var(--f-display);
+    font-size: clamp(26px, 5.4vw, 46px);
+    line-height: 1.12;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--letter);
+    padding-block: 3px 1px;
+    border-bottom: 2px solid var(--reader-groove);
+  }
+  .rb:last-child { border-bottom: 0; }
+  .rb.red { color: var(--letter-red); }
+
+  /* ---------- section heads + controls ---------- */
+  .sec-head {
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    justify-content: space-between; gap: 12px 16px;
+    margin-bottom: 16px;
+  }
+  h2 {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .btn {
+    font: 600 13px/1 var(--f-body);
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 13px;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.icon { font-size: 16px; padding: 8px 12px; }
+  .btn.danger { background: var(--t-fail); border-color: transparent; color: var(--on-tier); }
+  .btn.ghost { background: transparent; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  input[type="date"], textarea {
+    font: 600 13px var(--f-body);
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 9px;
+  }
+  .link {
+    font: inherit; font-weight: 600;
+    color: var(--accent);
+    background: none; border: 0; padding: 2px 0;
+    cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  /* ---------- seat + sync bar ---------- */
+  .bar {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 10px 16px;
+    margin-bottom: 14px;
+  }
+  .seat { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .seat b { color: var(--ink); }
+  .chip {
+    font: 700 13px/1 var(--f-body);
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .chip:hover, .chip.on { border-color: var(--accent); }
+  .sync { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .sync .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .sync[data-s="live"] .dot { background: var(--good); }
+  .sync[data-s="saving"] .dot { background: var(--accent); }
+  .sync[data-s="stale"] .dot, .sync[data-s="offline"] .dot { background: var(--warn); }
+
+  /* ---------- tickets ---------- */
+  .tickets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+    gap: 18px;
+  }
+  .tickets[aria-busy="true"] { opacity: .65; }
+  .ticket {
+    position: relative;
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 14px 30px -22px var(--shadow);
+  }
+  .ticket.mine { border-color: var(--accent); }
+  .stub { padding: 14px 18px 14px; display: grid; gap: 6px; }
+  .stub-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-family: var(--f-stamp);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-height: 24px;
+  }
+  .stamp {
+    font-weight: 700;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 1px 7px;
+    transform: rotate(-4deg);
+  }
+  .stub-main { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .pname {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-display);
+    font-size: 46px; line-height: .95;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+  .you {
+    font: 800 11px/1 var(--f-body);
+    letter-spacing: .14em;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 99px;
+    padding: 4px 8px;
+  }
+  .ptotal {
+    font-family: var(--f-display);
+    font-size: 52px; line-height: .95;
+    font-variant-numeric: tabular-nums;
+  }
+  .ptotal.neg { color: var(--t-fail); }
+  .ptotal.empty { color: var(--muted); }
+  .stub-sub { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted); }
+  .perf { position: relative; margin: 0 16px; border-top: 2px dashed var(--line); }
+  .perf::before, .perf::after {
+    content: "";
+    position: absolute;
+    top: -11px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+  .perf::before { left: -27px; clip-path: inset(0 0 0 50%); }
+  .perf::after { right: -27px; clip-path: inset(0 50% 0 0); }
+  .ticket.mine .perf::before, .ticket.mine .perf::after { border-color: var(--accent); }
+  .modes { padding: 14px 18px 18px; display: grid; gap: 14px; }
+  .mode-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .mname { font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); }
+  .mread { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .seg { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+  .sb {
+    height: 42px;
+    min-width: 0;
+    padding: 0;
+    font: 700 15px/1 var(--f-body);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  .sb:hover:not(:disabled) { border-color: var(--muted); color: var(--ink); }
+  .sb.on { color: var(--on-tier); border-color: transparent; }
+  .sb:disabled { cursor: not-allowed; }
+  .sb:disabled:not(.on) { opacity: .5; }
+  .f-gold { background: var(--t-gold); } .f-silver { background: var(--t-silver); }
+  .f-bronze { background: var(--t-bronze); } .f-trash { background: var(--t-trash); }
+  .f-fire { background: var(--t-fire); } .f-grave { background: var(--t-grave); }
+  .f-fail { background: var(--t-fail); }
+  .t-gold { color: var(--t-gold); } .t-silver { color: var(--t-silver); }
+  .t-bronze { color: var(--t-bronze); } .t-trash { color: var(--t-trash); }
+  .t-fire { color: var(--t-fire); } .t-grave { color: var(--t-grave); }
+  .t-fail { color: var(--t-fail); }
+  @media (prefers-reduced-motion: no-preference) {
+    .sb, .btn, .chip { transition: border-color 120ms, color 120ms, background-color 120ms; }
+  }
+
+  .dayfoot {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 12px 16px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .winner { font-size: 16px; min-width: 0; }
+  .actions, .confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .confirm span { font-size: 14px; font-weight: 600; }
+  #recapOut { width: 100%; margin-top: 12px; font-family: var(--f-stamp); font-weight: 400; }
+
+  /* ---------- weekly chart + price board ---------- */
+  .split { display: grid; gap: 28px; }
+  @media (min-width: 880px) {
+    .split { grid-template-columns: minmax(0, 2.1fr) minmax(250px, 1fr); align-items: start; }
+  }
+  .tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 10px 12px; text-align: right; white-space: nowrap; }
+  th {
+    font: 700 11px var(--f-body);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+  th.l, td.l { text-align: left; }
+  tbody tr + tr td { border-top: 1px solid var(--line); }
+  td.rank { font-family: var(--f-display); font-size: 28px; line-height: 1; width: 1%; }
+  td.lw { color: var(--muted); font-size: 13px; width: 1%; }
+  tr.lead td.rank { color: var(--accent); }
+  td.who { font-family: var(--f-display); font-size: 26px; line-height: 1; letter-spacing: .03em; text-transform: uppercase; }
+  td.gross { font-family: var(--f-display); font-size: 28px; line-height: 1; }
+  td.neg { color: var(--t-fail); }
+  td.sel, th.sel { background: var(--panel-2); }
+  td.won { font-weight: 700; color: var(--accent); }
+  .thb {
+    font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+    background: none; border: 0; padding: 0; cursor: pointer;
+  }
+  .thb:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+  .prices {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+  }
+  .prices h2 { font-size: 34px; }
+  .prices ol { list-style: none; margin: 14px 0 12px; padding: 0; display: grid; gap: 7px; }
+  .prices li {
+    display: grid;
+    grid-template-columns: 22px auto minmax(12px, 1fr) auto;
+    align-items: baseline;
+    gap: 8px;
+    font-weight: 600;
+  }
+  .prices .g { font-family: var(--f-stamp); font-weight: 700; color: var(--muted); }
+  .prices .dots { border-bottom: 2px dotted var(--line); transform: translateY(-5px); }
+  .prices .amt { font-family: var(--f-display); font-size: 24px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .fine { font-size: 13px; color: var(--muted); }
+
+  /* ---------- footer ---------- */
+  .foot {
+    display: grid; gap: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+  }
+  @media (min-width: 880px) { .foot { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+  .foot h3 {
+    margin: 0 0 6px;
+    font-family: var(--f-display); font-weight: 400;
+    font-size: 26px; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .rules p { font-size: 14px; color: var(--muted); max-width: 64ch; }
+  .rules p + p { margin-top: 8px; }
+  details summary { cursor: pointer; font-weight: 700; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { font-size: 13px; color: var(--muted); }
+  #importText { width: 100%; margin: 10px 0 8px; font-family: var(--f-stamp); font-weight: 400; }
+  #importMsg { margin-top: 8px; font-size: 13px; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(92vw, 460px);
+    background: var(--ink);
+    color: var(--bg);
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 12px 30px -10px var(--shadow);
+    z-index: 20;
+  }
+</style>
+
+<div class="wrap">
+  <header class="marquee" id="marquee">
+    <div class="bulbs" id="bulbs" aria-hidden="true"></div>
+    <div class="fascia">
+      <p class="kicker">Now showing daily · framed.wtf</p>
+      <h1>The Box Office</h1>
+    </div>
+    <div class="reader">
+      <p class="rb" id="rb1">This week</p>
+      <p class="rb red" id="rb2">Loading the weekly gross</p>
+      <p class="rb" id="rb3">Framed · One Frame · Title · Poster</p>
+    </div>
+  </header>
+
+  <section aria-labelledby="dayTitle">
+    <div class="sec-head">
+      <div>
+        <h2 id="dayTitle">Today's tickets</h2>
+        <p class="sub" id="daySub"></p>
+      </div>
+      <div class="controls">
+        <button type="button" class="btn icon" id="prevDay" aria-label="Previous day">‹</button>
+        <input type="date" id="datePick" aria-label="Pick a date">
+        <button type="button" class="btn icon" id="nextDay" aria-label="Next day">›</button>
+        <button type="button" class="btn" id="todayBtn">Today</button>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="seat" id="seat"></div>
+      <p class="sync" id="sync" data-s="connecting" role="status"><span class="dot"></span><span id="syncText">Connecting to the box office…</span></p>
+    </div>
+    <div class="tickets" id="tickets" aria-busy="true"></div>
+    <div class="dayfoot">
+      <p class="winner" id="winner"></p>
+      <div class="actions" id="actions">
+        <button type="button" class="btn" id="copyBtn">Copy recap</button>
+        <button type="button" class="btn ghost" id="clearBtn">Clear day</button>
+      </div>
+      <div class="confirm" id="confirm" hidden>
+        <span id="confirmText"></span>
+        <button type="button" class="btn danger" id="confirmYes">Clear for everyone</button>
+        <button type="button" class="btn" id="confirmNo">Keep it</button>
+      </div>
+    </div>
+    <textarea id="recapOut" rows="5" readonly hidden aria-label="Recap text to copy"></textarea>
+  </section>
+
+  <div class="split">
+    <section aria-labelledby="weekTitle">
+      <div class="sec-head">
+        <div>
+          <h2 id="weekTitle">The weekly gross</h2>
+          <p class="sub" id="weekSub"></p>
+        </div>
+        <div class="controls">
+          <button type="button" class="btn" id="prevWeek">‹ Week</button>
+          <button type="button" class="btn" id="nextWeek">Week ›</button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table id="weekTable" aria-label="This week's chart">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note" id="weekNote"></p>
+    </section>
+
+    <aside class="prices" aria-labelledby="priceTitle">
+      <h2 id="priceTitle">Ticket prices</h2>
+      <p class="sub">Per mode, by the guess you solved on</p>
+      <ol>
+        <li><span class="g">1</span><span class="t-gold">Gold</span><span class="dots"></span><span class="amt">$10M</span></li>
+        <li><span class="g">2</span><span class="t-silver">Silver</span><span class="dots"></span><span class="amt">$7M</span></li>
+        <li><span class="g">3</span><span class="t-bronze">Bronze</span><span class="dots"></span><span class="amt">$5M</span></li>
+        <li><span class="g">4</span><span class="t-trash">Trash</span><span class="dots"></span><span class="amt">$3M</span></li>
+        <li><span class="g">5</span><span class="t-fire">Dumpster Fire</span><span class="dots"></span><span class="amt">$2M</span></li>
+        <li><span class="g">6</span><span class="t-grave">Grave</span><span class="dots"></span><span class="amt">$1M</span></li>
+        <li><span class="g">✕</span><span class="t-fail">Fail</span><span class="dots"></span><span class="amt t-fail">−$2M</span></li>
+      </ol>
+      <p class="fine">A skipped mode counts as a fail. A fail is the only way into the red.</p>
+    </aside>
+  </div>
+
+  <section aria-labelledby="lifeTitle">
+    <div class="sec-head">
+      <div>
+        <h2 id="lifeTitle">Lifetime grosses</h2>
+        <p class="sub" id="lifeSub"></p>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table id="lifeTable" aria-label="Lifetime totals">
+        <thead>
+          <tr><th class="l">Player</th><th>Gross</th><th>Weekly titles</th><th>Golds</th><th>Fails</th><th>Best day</th><th>Days played</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="rules">
+      <h3>House rules v2</h3>
+      <p>Each mode pays out by the guess you solved on. Daily score is the four modes added up, from $40M at best to −$8M at worst. A lucky guess counts. Knowing the movie but not its name does not.</p>
+      <p>Daily ties go to more modes solved, then the best single mode. The weekly gross runs Monday to Friday and the title goes to the top gross once Friday is over. Weekend days count toward lifetime only.</p>
+    </div>
+    <details class="import" id="importBox">
+      <summary>Bring in scores from the old page</summary>
+      <p>On the old Box Office page, tap Export data, then paste it here. Days already on this board stay as they are.</p>
+      <textarea id="importText" rows="4" placeholder='{"version":2,"days":{...}}' aria-label="Exported scores"></textarea>
+      <button type="button" class="btn" id="importBtn">Import scores</button>
+      <p id="importMsg" role="status"></p>
+    </details>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ----- rubric v2. Raw guesses are stored (1-6, or null for a fail); points are always recomputed. -----
+  const PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 2, 6: 1 };
+  const TIER = { 1: "Gold", 2: "Silver", 3: "Bronze", 4: "Trash", 5: "Dumpster Fire", 6: "Grave" };
+  const TC = { 1: "gold", 2: "silver", 3: "bronze", 4: "trash", 5: "fire", 6: "grave" };
+  const points = r => (PTS[r] !== undefined ? PTS[r] : -2); // null, missing or skipped = fail = -2
+
+  const MODES = [
+    { id: "framed", name: "Framed" },
+    { id: "oneframe", name: "One Frame" },
+    { id: "title", name: "Title" },
+    { id: "poster", name: "Poster" }
+  ];
+  const PLAYERS = [
+    { id: "nick", name: "Nick", ini: "NF" },
+    { id: "david", name: "David", ini: "DR" },
+    { id: "nate", name: "Nate", ini: "NK" }
+  ];
+  const NAME = Object.fromEntries(PLAYERS.map(p => [p.id, p.name]));
+  const COLL = "scores";          // one doc per player per day: scores/2026-11-09_nick
+  const ME_KEY = "box-office-me"; // which ticket is yours (also kept in your private db prefs)
+
+  const $ = id => document.getElementById(id);
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked */ } };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  // ----- dates (local time) -----
+  const pad = n => String(n).padStart(2, "0");
+  const fmtISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayISO = () => fmtISO(new Date());
+  const parseISO = iso => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return fmtISO(d); };
+  const mondayOf = iso => { const d = parseISO(iso); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return fmtISO(d); };
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const shortDate = iso => { const d = parseISO(iso); return `${MON[d.getMonth()]} ${d.getDate()}`; };
+  const longDay = iso => { const d = parseISO(iso); return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; };
+  const chatDate = iso => { const d = parseISO(iso); return `${d.getMonth() + 1}/${d.getDate()}`; };
+  const weekDays = mon => [0, 1, 2, 3, 4].map(i => addDays(mon, i)); // the title runs Mon-Fri
+  const weekRange = mon => {
+    const fri = addDays(mon, 4), a = parseISO(mon), b = parseISO(fri);
+    return a.getMonth() === b.getMonth() ? `${shortDate(mon)}–${b.getDate()}` : `${shortDate(mon)}–${shortDate(fri)}`;
+  };
+  const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+  // scores display as box-office millions; stored data stays raw guesses
+  const money = n => (n < 0 ? "−$" : "$") + Math.abs(n) + "M";
+  const moneyChat = n => (n < 0 ? "-$" : "$") + Math.abs(n) + "M";
+  const moneySigned = n => (n >= 0 ? "+$" : "-$") + Math.abs(n) + "M";
+
+  // ----- state -----
+  const remote = new Map(); // "date_player" -> { date, player, modes, by }   (what the shared board says)
+  const local = new Map();  // "date_player" -> modes                          (taps still being saved)
+  let selected = todayISO();
+  let me = NAME[lsGet(ME_KEY)] ? lsGet(ME_KEY) : null;
+  let changingSeat = false;
+  let db = null, uid = null;
+  let conn = "connecting"; // connecting | live | stale | offline | readonly | nodb
+  let readOnly = false;
+  let loaded = false;
+
+  const keyOf = (date, pid) => `${date}_${pid}`;
+  function entry(date, pid) {
+    const k = keyOf(date, pid);
+    if (local.has(k)) return local.get(k);
+    const r = remote.get(k);
+    return r ? r.modes : undefined;
+  }
+  const getResult = (date, pid, mid) => { const e = entry(date, pid); return e ? e[mid] : undefined; };
+  const hasAny = e => !!e && MODES.some(m => e[m.id] !== undefined);
+  function enteredBy(date, pid) {
+    const r = remote.get(keyOf(date, pid));
+    return r && r.by && r.by !== pid && NAME[r.by] ? r.by : null;
+  }
+  function allDates() {
+    const s = new Set();
+    remote.forEach(v => s.add(v.date));
+    local.forEach((v, k) => s.add(k.slice(0, 10)));
+    return [...s];
+  }
+  const canWrite = () => !!db && loaded && !readOnly;
+
+  // ----- scoring -----
+  function playerDay(iso, pid) {
+    let total = 0, solved = 0, best = -2;
+    MODES.forEach(m => {
+      const r = getResult(iso, pid, m.id), p = points(r);
+      total += p;
+      if (PTS[r] !== undefined) solved++;
+      if (p > best) best = p;
+    });
+    return { total, solved, best };
+  }
+  const dayTouched = iso => PLAYERS.some(p => hasAny(entry(iso, p.id)));
+  function dayWinner(iso) {
+    const r = PLAYERS.map(p => ({ id: p.id, name: p.name, ...playerDay(iso, p.id) }))
+      .sort((a, b) => (b.total - a.total) || (b.solved - a.solved) || (b.best - a.best));
+    const a = r[0], b = r[1];
+    if (a.total === b.total && a.solved === b.solved && a.best === b.best) {
+      return { tie: true, tied: r.filter(x => x.total === a.total && x.solved === a.solved && x.best === a.best), ranked: r };
+    }
+    let why = "on points";
+    if (a.total === b.total) why = a.solved !== b.solved ? "tiebreak: more modes solved" : "tiebreak: best single mode";
+    return { tie: false, winner: a, why, ranked: r };
+  }
+  function weekTotals(mon) {
+    const totals = {}; let days = 0;
+    PLAYERS.forEach(p => { totals[p.id] = 0; });
+    weekDays(mon).forEach(iso => {
+      if (!dayTouched(iso)) return;
+      days++;
+      PLAYERS.forEach(p => { totals[p.id] += playerDay(iso, p.id).total; });
+    });
+    return { totals, days };
+  }
+  function rankLabels(totals) {
+    const vals = PLAYERS.map(p => totals[p.id]), out = {};
+    PLAYERS.forEach(p => {
+      const higher = vals.filter(v => v > totals[p.id]).length;
+      const same = vals.filter(v => v === totals[p.id]).length;
+      out[p.id] = (same > 1 ? "T-" : "") + (higher + 1);
+    });
+    return out;
+  }
+  // A title is awarded once that week's Friday has passed, to a single top gross.
+  function weekTitle(mon) {
+    if (addDays(mon, 4) >= todayISO()) return { final: false };
+    const wt = weekTotals(mon);
+    if (!wt.days) return { final: true, none: true };
+    const best = Math.max(...PLAYERS.map(p => wt.totals[p.id]));
+    const top = PLAYERS.filter(p => wt.totals[p.id] === best);
+    return { final: true, winner: top.length === 1 ? top[0] : null, tied: top, total: best };
+  }
+
+  // ----- saving -----
+  const timers = new Map(), inflight = new Set(), dirty = new Set();
+  const busy = () => timers.size + inflight.size > 0;
+
+  function setResult(date, pid, mid, val) {
+    if (!canWrite()) return;
+    const cur = Object.assign({}, entry(date, pid) || {});
+    if (val === undefined) delete cur[mid]; else cur[mid] = val;
+    local.set(keyOf(date, pid), cur);
+    scheduleWrite(keyOf(date, pid), 450);
+    render();
+  }
+  function scheduleWrite(key, ms) {
+    clearTimeout(timers.get(key));
+    timers.set(key, setTimeout(() => flush(key), ms));
+    renderSync();
+  }
+  async function flush(key) {
+    timers.delete(key);
+    if (inflight.has(key)) { dirty.add(key); return; }
+    inflight.add(key);
+    renderSync();
+    const body = local.get(key) || {};
+    const date = key.slice(0, 10), pid = key.slice(11);
+    const ref = db.collection(COLL).doc(key);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (!hasAny(body)) await ref.delete();
+        else {
+          const doc = { date, player: pid, by: me || null, at: new Date().toISOString() };
+          MODES.forEach(m => { if (body[m.id] !== undefined) doc[m.id] = body[m.id]; });
+          await ref.set(doc);
+        }
+        break;
+      } catch (e) {
+        const code = e && e.code;
+        if (code === "unavailable" && attempt === 0) { await sleep(400 + Math.random() * 700); continue; }
+        if (code === "invalid_argument") {
+          readOnly = true; conn = "readonly";
+          toast("You can view the board but not save scores. Ask Nick to make you a Contributor.");
+        } else if (code === "quota_exceeded") {
+          toast("The scoreboard is full. Clear some old days to make room.");
+        } else {
+          toast("That score didn't save. Check your connection, then tap it again.");
+        }
+        dirty.delete(key);
+        break;
+      }
+    }
+    inflight.delete(key);
+    if (dirty.has(key)) { dirty.delete(key); flush(key); return; }
+    if (!timers.has(key)) local.delete(key); // the live board now carries it
+    render();
+  }
+
+  // ----- render -----
+  function render() {
+    const focusId = document.activeElement && document.activeElement.id;
+    $("datePick").value = selected;
+    const isToday = selected === todayISO();
+    $("dayTitle").textContent = isToday ? "Today's tickets" : "Tickets for " + longDay(selected);
+    $("daySub").textContent = isToday ? longDay(selected) : "Today is " + longDay(todayISO());
+    renderMarquee();
+    renderSeat();
+    renderSync();
+    renderTickets();
+    renderWeek();
+    renderLifetime();
+    if (focusId && $(focusId) && document.activeElement !== $(focusId)) $(focusId).focus();
+  }
+
+  function renderMarquee() {
+    const mon = mondayOf(selected), wt = weekTotals(mon), title = weekTitle(mon);
+    $("rb1").textContent = "Week of " + weekRange(mon);
+    let lead;
+    if (!loaded && conn === "connecting") lead = "Loading the weekly gross";
+    else if (!wt.days) lead = "No gross yet this week";
+    else {
+      const best = Math.max(...PLAYERS.map(p => wt.totals[p.id]));
+      const top = PLAYERS.filter(p => wt.totals[p.id] === best).map(p => p.name);
+      if (title.final) lead = top.length === 1 ? `Final · ${top[0]} takes the week · ${money(best)}` : `Final · ${top.join(" & ")} tie · no title`;
+      else lead = top.length === 1 ? `${top[0]} leads the week · ${money(best)}` : `${top.join(" & ")} tied up top · ${money(best)}`;
+    }
+    $("rb2").textContent = lead;
+    const last = weekTitle(addDays(mon, -7));
+    let r3 = "Framed · One Frame · Title · Poster";
+    if (last.final && !last.none) r3 = last.winner ? `Last week · ${last.winner.name} took the title` : "Last week · a tie, no title";
+    $("rb3").textContent = r3;
+  }
+
+  function renderSeat() {
+    const el = $("seat");
+    if (me && !changingSeat) {
+      el.innerHTML = `<span>Your seat: <b>${NAME[me]}</b></span><button type="button" class="link" id="seatChange">Change</button>`;
+    } else {
+      el.innerHTML = `<span>Which ticket is yours? It goes first, and you can still fill in the others.</span>` +
+        PLAYERS.map(p => `<button type="button" class="chip${p.id === me ? " on" : ""}" id="seat-${p.id}" data-seat="${p.id}">${p.name}</button>`).join("");
+    }
+  }
+
+  function renderSync() {
+    const el = $("sync");
+    let s = conn, text;
+    if ((conn === "live") && busy()) s = "saving";
+    switch (s) {
+      case "connecting": text = "Connecting to the box office…"; break;
+      case "live": text = "Live · David, Nate and Nick all see this board"; break;
+      case "saving": text = "Saving…"; break;
+      case "stale": text = "Can't reach the scoreboard yet. It keeps trying."; break;
+      case "offline": text = "Lost the connection to the scoreboard. Reload the page to reconnect."; break;
+      case "readonly": text = "View only. Ask Nick to make you a Contributor to enter scores."; break;
+      default: text = "Scores live on claude.ai. Open this page there, signed in, to see and enter them.";
+    }
+    el.dataset.s = s;
+    $("syncText").textContent = text;
+    const off = !canWrite();
+    $("clearBtn").disabled = off;
+    $("importBtn").disabled = off;
+  }
+
+  function ticketHTML(p, w) {
+    const e = entry(selected, p.id), any = hasAny(e), s = playerDay(selected, p.id);
+    const mine = p.id === me;
+    const topDay = w && !w.tie && w.winner.id === p.id;
+    const by = enteredBy(selected, p.id);
+    const d = parseISO(selected);
+    const serial = `No. ${pad(d.getMonth() + 1)}${pad(d.getDate())}·${p.ini}`;
+    const dis = canWrite() ? "" : " disabled";
+    const modes = MODES.map(m => {
+      const r = getResult(selected, p.id, m.id);
+      let read;
+      if (r === undefined) read = `<span class="mread dim">Not entered · −$2M</span>`;
+      else if (r === null) read = `<span class="mread t-fail">Fail · −$2M</span>`;
+      else read = `<span class="mread t-${TC[r]}">${TIER[r]} · +$${PTS[r]}M</span>`;
+      const btns = [1, 2, 3, 4, 5, 6, "F"].map(v => {
+        const on = v === "F" ? r === null : r === v;
+        const cls = on ? ` on f-${v === "F" ? "fail" : TC[v]}` : "";
+        const label = `${p.name}, ${m.name}: ${v === "F" ? "fail" : "solved on guess " + v}`;
+        return `<button type="button" class="sb${cls}" id="b-${p.id}-${m.id}-${v}" data-p="${p.id}" data-m="${m.id}" data-v="${v}" aria-pressed="${on}" aria-label="${label}"${dis}>${v === "F" ? "✕" : v}</button>`;
+      }).join("");
+      return `<div class="mode"><div class="mode-top"><span class="mname">${m.name}</span>${read}</div><div class="seg">${btns}</div></div>`;
+    }).join("");
+    const notes = [];
+    if (any && s.total < 0) notes.push("in the red");
+    if (by) notes.push("entered by " + NAME[by]);
+    return `<article class="ticket${mine ? " mine" : ""}" aria-label="${p.name}'s ticket">
+      <div class="stub">
+        <div class="stub-top"><span>Admit one</span>${topDay ? `<span class="stamp">★ No. 1 today</span>` : `<span>${serial}</span>`}</div>
+        <div class="stub-main">
+          <span class="pname">${p.name}${mine ? ` <span class="you">You</span>` : ""}</span>
+          <span class="ptotal${!any ? " empty" : s.total < 0 ? " neg" : ""}">${money(s.total)}</span>
+        </div>
+        <div class="stub-sub"><span>${any ? `${s.solved} of 4 solved` : "Nothing entered yet"}</span><span>${notes.join(" · ")}</span></div>
+      </div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="modes">${modes}</div>
+    </article>`;
+  }
+
+  function renderTickets() {
+    const touched = dayTouched(selected);
+    const w = touched ? dayWinner(selected) : null;
+    const order = me ? [PLAYERS.find(p => p.id === me), ...PLAYERS.filter(p => p.id !== me)] : PLAYERS;
+    $("tickets").innerHTML = order.map(p => ticketHTML(p, w)).join("");
+    $("tickets").setAttribute("aria-busy", loaded || conn === "nodb" ? "false" : "true");
+    const el = $("winner");
+    if (!w) {
+      el.innerHTML = `<span class="dim">No scores for ${longDay(selected)} yet. Tap the guess you solved on for each mode.</span>`;
+    } else if (w.tie) {
+      el.innerHTML = `<b>Dead heat:</b> ${w.tied.map(x => x.name).join(" & ")} at ${money(w.tied[0].total)} <span class="dim">(same modes solved, same best mode)</span>`;
+    } else {
+      el.innerHTML = `<b>${w.winner.name}</b> tops the box office at <b>${money(w.winner.total)}</b> <span class="dim">(${w.why})</span>`;
+    }
+  }
+
+  function renderWeek() {
+    const mon = mondayOf(selected), days = weekDays(mon), wt = weekTotals(mon);
+    const lastWt = weekTotals(addDays(mon, -7));
+    const tw = rankLabels(wt.totals), lw = rankLabels(lastWt.totals);
+    $("weekSub").textContent = `Monday to Friday · ${weekRange(mon)}`;
+    const wins = {}, dayW = {};
+    PLAYERS.forEach(p => { wins[p.id] = 0; });
+    days.forEach(iso => {
+      if (!dayTouched(iso)) return;
+      const w = dayWinner(iso);
+      dayW[iso] = w;
+      if (!w.tie) wins[w.winner.id]++;
+    });
+    const head = days.map(iso => {
+      const d = parseISO(iso);
+      return `<th class="${iso === selected ? "sel" : ""}"><button type="button" class="thb" id="day-${iso}" data-day="${iso}" aria-label="Show ${longDay(iso)}">${DOW[d.getDay()]} ${d.getDate()}</button></th>`;
+    }).join("");
+    $("weekTable").querySelector("thead").innerHTML =
+      `<tr><th class="l" title="This week's rank">TW</th><th class="l" title="Last week's rank">LW</th><th class="l">Player</th>${head}<th>Gross</th><th>Days won</th></tr>`;
+    const ranked = PLAYERS.slice().sort((a, b) => wt.totals[b.id] - wt.totals[a.id]);
+    const best = Math.max(...PLAYERS.map(p => wt.totals[p.id]));
+    const soleLead = PLAYERS.filter(p => wt.totals[p.id] === best).length === 1;
+    $("weekTable").querySelector("tbody").innerHTML = ranked.map(p => {
+      const lead = wt.days && soleLead && wt.totals[p.id] === best;
+      const cells = days.map(iso => {
+        const sel = iso === selected ? " sel" : "";
+        if (!dayW[iso]) return `<td class="dim${sel}">–</td>`;
+        const t = playerDay(iso, p.id).total;
+        const won = !dayW[iso].tie && dayW[iso].winner.id === p.id;
+        return `<td class="${won ? "won" : t < 0 ? "neg" : ""}${sel}">${won ? "★ " : ""}${money(t)}</td>`;
+      }).join("");
+      const g = wt.totals[p.id];
+      return `<tr class="${lead ? "lead" : ""}">
+        <td class="l rank">${wt.days ? tw[p.id] : "–"}</td>
+        <td class="l lw">${lastWt.days ? lw[p.id] : "–"}</td>
+        <td class="l who">${p.name}</td>${cells}
+        <td class="gross${g < 0 ? " neg" : ""}">${wt.days ? money(g) : "–"}</td>
+        <td>${wt.days ? wins[p.id] : "–"}</td></tr>`;
+    }).join("");
+    const t = weekTitle(mon);
+    let note;
+    if (!wt.days) note = "No days on the books this week yet. ★ marks the day's winner once scores are in.";
+    else if (t.final) note = t.winner ? `Final. ${t.winner.name} takes the week with ${money(t.total)}.` : `Final. ${t.tied.map(x => x.name).join(" & ")} share the top at ${money(t.total)}, so no title this week.`;
+    else note = "★ marks each day's winner. The title goes to the top gross once Friday is over.";
+    $("weekNote").textContent = note;
+  }
+
+  function renderLifetime() {
+    const dates = allDates().filter(dayTouched).sort();
+    const tb = $("lifeTable").querySelector("tbody");
+    if (!dates.length) {
+      $("lifeSub").textContent = "Starts with the first day on the board";
+      tb.innerHTML = `<tr><td class="l dim" colspan="7">${loaded ? "Nothing on the books yet. Tap a guess on today's ticket to open the run." : "Waiting for the scoreboard…"}</td></tr>`;
+      return;
+    }
+    const st = {};
+    PLAYERS.forEach(p => { st[p.id] = { gross: 0, titles: 0, golds: 0, fails: 0, best: null, days: 0 }; });
+    dates.forEach(iso => PLAYERS.forEach(p => {
+      const s = playerDay(iso, p.id), x = st[p.id];
+      x.gross += s.total;
+      if (x.best === null || s.total > x.best) x.best = s.total;
+      if (hasAny(entry(iso, p.id))) x.days++;
+      MODES.forEach(m => {
+        const r = getResult(iso, p.id, m.id);
+        if (r === 1) x.golds++;
+        if (PTS[r] === undefined) x.fails++;
+      });
+    }));
+    [...new Set(dates.map(mondayOf))].forEach(mon => {
+      const t = weekTitle(mon);
+      if (t.final && t.winner) st[t.winner.id].titles++;
+    });
+    $("lifeSub").textContent = `${dates.length} ${dates.length === 1 ? "day" : "days"} on the books since ${shortDate(dates[0])}, ${dates[0].slice(0, 4)}`;
+    tb.innerHTML = PLAYERS.slice().sort((a, b) => st[b.id].gross - st[a.id].gross).map(p => {
+      const x = st[p.id];
+      return `<tr><td class="l who">${p.name}</td><td class="gross${x.gross < 0 ? " neg" : ""}">${money(x.gross)}</td>
+        <td>${x.titles}</td><td>${x.golds}</td><td>${x.fails}</td><td>${money(x.best)}</td><td>${x.days}</td></tr>`;
+    }).join("");
+  }
+
+  // ----- toast -----
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 3800);
+  }
+
+  // ----- recap for the group chat -----
+  function buildRecap() {
+    const w = dayWinner(selected);
+    const lines = [`Framed ${chatDate(selected)} · The Box Office`];
+    w.ranked.forEach(p => {
+      const parts = MODES.map(m => moneySigned(points(getResult(selected, p.id, m.id))));
+      const crown = !w.tie && w.winner.id === p.id ? " 👑" : "";
+      lines.push(`${p.name}: ${parts.join(" ")} = ${moneyChat(p.total)}${crown}`);
+    });
+    const wt = weekTotals(mondayOf(selected));
+    lines.push("Week so far: " + PLAYERS.slice().sort((a, b) => wt.totals[b.id] - wt.totals[a.id])
+      .map(p => `${p.name} ${moneyChat(wt.totals[p.id])}`).join(" · "));
+    return lines.join("\n");
+  }
+
+  // ----- import from the old page's Export data -----
+  async function runImport() {
+    const msg = $("importMsg");
+    if (!canWrite()) { msg.textContent = "Connect to the scoreboard first."; return; }
+    let parsed;
+    try { parsed = JSON.parse($("importText").value.trim()); } catch (e) { parsed = null; }
+    if (!parsed || typeof parsed.days !== "object" || !parsed.days) {
+      msg.textContent = "That doesn't look like an export from The Box Office. Paste the whole thing, starting with {.";
+      return;
+    }
+    $("importBtn").disabled = true;
+    let added = 0, kept = 0;
+    try {
+      for (const [date, players] of Object.entries(parsed.days)) {
+        if (!isDate(date) || !players || typeof players !== "object") continue;
+        for (const p of PLAYERS) {
+          const e = players[p.id];
+          if (!e || typeof e !== "object") continue;
+          const doc = { date, player: p.id, by: me || null, at: new Date().toISOString(), imported: true };
+          let n = 0;
+          MODES.forEach(m => {
+            if (!(m.id in e)) return;
+            const v = e[m.id];
+            if (v === null || PTS[v] !== undefined) { doc[m.id] = v; n++; }
+          });
+          if (!n) continue;
+          if (remote.has(keyOf(date, p.id)) || local.has(keyOf(date, p.id))) { kept++; continue; }
+          msg.textContent = `Importing… ${added} added`;
+          await db.collection(COLL).doc(keyOf(date, p.id)).set(doc);
+          added++;
+        }
+      }
+      msg.textContent = `Added ${added} player-${added === 1 ? "day" : "days"}.` + (kept ? ` Kept ${kept} that were already on the board.` : "");
+      if (added) $("importText").value = "";
+    } catch (e) {
+      msg.textContent = `Stopped after ${added} added. ` + (e && e.code === "invalid_argument"
+        ? "You don't have permission to save scores here."
+        : "The connection dropped. Run the import again to pick up the rest.");
+    }
+    renderSync();
+  }
+
+  // ----- marquee bulbs, placed evenly around the sign -----
+  function layBulbs() {
+    const host = $("bulbs"), w = host.clientWidth, h = host.clientHeight;
+    if (!w || !h) return;
+    const inset = 9, gap = 24;
+    const nx = Math.max(4, Math.round((w - 2 * inset) / gap)), ny = Math.max(2, Math.round((h - 2 * inset) / gap));
+    const sx = (w - 2 * inset) / nx, sy = (h - 2 * inset) / ny, pts = [];
+    for (let i = 0; i < nx; i++) pts.push([inset + i * sx, inset]);
+    for (let j = 0; j < ny; j++) pts.push([w - inset, inset + j * sy]);
+    for (let i = nx; i > 0; i--) pts.push([inset + i * sx, h - inset]);
+    for (let j = ny; j > 0; j--) pts.push([inset, inset + j * sy]);
+    host.innerHTML = pts.map((p, k) => `<i class="b${k % 3}" style="left:${p[0].toFixed(1)}px;top:${p[1].toFixed(1)}px"></i>`).join("");
+  }
+  try { new ResizeObserver(layBulbs).observe($("marquee")); }
+  catch (e) { layBulbs(); window.addEventListener("resize", layBulbs); }
+
+  // ----- wiring -----
+  $("tickets").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-v]");
+    if (!b || b.disabled) return;
+    const pid = b.dataset.p, mid = b.dataset.m, v = b.dataset.v;
+    const val = v === "F" ? null : Number(v);
+    const r = getResult(selected, pid, mid);
+    setResult(selected, pid, mid, r === val ? undefined : val); // tap the lit one again to clear it
+  });
+  $("seat").addEventListener("click", ev => {
+    if (ev.target.id === "seatChange") { changingSeat = true; renderSeat(); const f = $("seat-" + me); if (f) f.focus(); return; }
+    const b = ev.target.closest("button[data-seat]");
+    if (!b) return;
+    me = b.dataset.seat;
+    changingSeat = false;
+    lsSet(ME_KEY, me);
+    if (db && uid) db.doc(`data/users/${uid}/prefs`).set({ player: me }).catch(() => {});
+    render();
+    const c = $("seatChange"); if (c) c.focus();
+  });
+  $("weekTable").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-day]");
+    if (b) { selected = b.dataset.day; render(); }
+  });
+  $("datePick").addEventListener("change", e => { if (isDate(e.target.value)) { selected = e.target.value; render(); } });
+  $("prevDay").addEventListener("click", () => { selected = addDays(selected, -1); render(); });
+  $("nextDay").addEventListener("click", () => { selected = addDays(selected, 1); render(); });
+  $("todayBtn").addEventListener("click", () => { selected = todayISO(); render(); });
+  $("prevWeek").addEventListener("click", () => { selected = addDays(selected, -7); render(); });
+  $("nextWeek").addEventListener("click", () => { selected = addDays(selected, 7); render(); });
+
+  $("copyBtn").addEventListener("click", () => {
+    if (!dayTouched(selected)) { toast("Nothing to copy for this day yet."); return; }
+    const text = buildRecap(), out = $("recapOut");
+    const fallback = () => { out.hidden = false; out.value = text; out.focus(); out.select(); toast("Copy the recap from the box below the tickets."); };
+    try {
+      navigator.clipboard.writeText(text).then(() => { out.hidden = true; toast("Recap copied. Paste it in the group chat."); }, fallback);
+    } catch (e) { fallback(); }
+  });
+  function closeConfirm() { $("confirm").hidden = true; $("actions").hidden = false; }
+  $("clearBtn").addEventListener("click", () => {
+    if (!dayTouched(selected)) { toast("There's nothing to clear on this day."); return; }
+    $("confirmText").textContent = `Clear every score for ${longDay(selected)}? Everyone loses them.`;
+    $("actions").hidden = true;
+    $("confirm").hidden = false;
+    $("confirmNo").focus();
+  });
+  $("confirmNo").addEventListener("click", () => { closeConfirm(); $("clearBtn").focus(); });
+  $("confirmYes").addEventListener("click", () => {
+    if (!canWrite()) { closeConfirm(); return; }
+    PLAYERS.forEach(p => {
+      if (!entry(selected, p.id)) return;
+      local.set(keyOf(selected, p.id), {});
+      scheduleWrite(keyOf(selected, p.id), 0);
+    });
+    closeConfirm();
+    render();
+    toast(`Cleared ${longDay(selected)}.`);
+  });
+  $("importBtn").addEventListener("click", runImport);
+
+  // ----- connect to the shared scoreboard -----
+  function subscribe() {
+    const timer = setTimeout(() => { if (!loaded) { conn = "stale"; renderSync(); } }, 10000);
+    db.collection(COLL).onSnapshot(snap => {
+      remote.clear();
+      snap.docs.forEach(d => {
+        const v = d.data();
+        if (!v || !isDate(v.date) || !NAME[v.player]) return;
+        const modes = {};
+        MODES.forEach(m => {
+          if (!(m.id in v)) return;
+          modes[m.id] = (v[m.id] === null || PTS[v[m.id]] !== undefined) ? v[m.id] : null;
+        });
+        remote.set(keyOf(v.date, v.player), { date: v.date, player: v.player, modes, by: v.by || null });
+      });
+      if (!snap.metadata.fromCache && !loaded) {
+        clearTimeout(timer);
+        loaded = true;
+        conn = readOnly ? "readonly" : "live";
+      } else if (!snap.metadata.fromCache && conn === "stale") {
+        conn = readOnly ? "readonly" : "live";
+      }
+      render();
+    }, () => {
+      clearTimeout(timer);
+      conn = "offline";
+      render();
+    });
+  }
+
+  async function boot() {
+    const use = window.claude && window.claude.use;
+    if (!use) { conn = "nodb"; render(); return; }
+    let user = null;
+    try { [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]); } catch (e) { db = null; }
+    if (!db) { conn = "nodb"; render(); return; }
+    if (user) {
+      if (await user.can("data.write") === false) readOnly = true;
+      uid = await user.id();
+      if (uid) {
+        try {
+          const snap = await db.doc(`data/users/${uid}/prefs`).get();
+          const p = snap.exists ? snap.data().player : null;
+          if (NAME[p] && p !== me) { me = p; lsSet(ME_KEY, p); }
+        } catch (e) { /* keep the local seat */ }
+      }
+    }
+    subscribe();
+    render();
+  }
+
+  render();
+  boot();
+})();
+</script>

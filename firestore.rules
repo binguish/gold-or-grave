@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// The Box Office scoreboard. Nobody signs in, so the rules guard the data's shape instead:
+// one document per player per day, id "YYYY-MM-DD_player", raw guesses only (1-6, or null for a fail).
+// Everything else in the database is closed.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function validId(id) {
+      return id.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}_(nick|david|nate)$');
+    }
+    function guessOk(d, k) {
+      return !(k in d) || d[k] == null || d[k] in [1, 2, 3, 4, 5, 6];
+    }
+    function validScore(id, d) {
+      return d.keys().hasOnly(['date', 'player', 'framed', 'oneframe', 'title', 'poster', 'by', 'at', 'imported'])
+        && d.date == id.split('_')[0]
+        && d.player == id.split('_')[1]
+        && guessOk(d, 'framed') && guessOk(d, 'oneframe') && guessOk(d, 'title') && guessOk(d, 'poster')
+        && (!('by' in d) || d.by == null || d.by in ['nick', 'david', 'nate'])
+        && (!('at' in d) || d.at is string)
+        && (!('imported' in d) || d.imported is bool);
+    }
+
+    match /scores/{id} {
+      allow read: if true;
+      allow create, update: if validId(id) && validScore(id, request.resource.data);
+      allow delete: if validId(id);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

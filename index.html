@@ -1,786 +1,1292 @@
 <!doctype html>
 <html lang="en">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
 <title>The Box Office</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317130c'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-style='italic' font-weight='900' font-size='40' text-anchor='middle' fill='%23e9d9b0'%3EB%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wdth,wght@1,62.5..100,700..900&family=Yellowtail&family=Jost:wght@400;500;600;700&family=Special+Elite&display=swap">
 <style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<style>
+  /* Layout: a 1950 studio title card as the hero (silver screen, film grain, gate corners), then lobby-card
+     tickets, the trade report and the admission board. Hand-tinted black-and-white: one dark look by choice,
+     with soft tints kept on the scoring tiers so Gold, Silver and Bronze still read at a glance. */
   :root {
-    --bg: #131518;
-    --panel: #1b1e23;
-    --panel2: #22262d;
-    --line: #2c313a;
-    --ink: #edeef1;
-    --muted: #99a0ac;
-    --gold: #e6b355;
-    --silver: #c2cad6;
-    --bronze: #c8834c;
-    --trash: #9aa36b;
-    --fire: #e06a3d;
-    --grave: #878e9b;
-    --fail: #d9565e;
-    --darkink: #15161a;
+    --page: #0c0b0a; --panel: #171513; --panel-2: #25221f; --line: #3a352f;
+    --ink: #eeeae3; --muted: #a39b91; --accent: #e9d9b0; --on-accent: #17130c;
+    --screen-hi: #a8a399; --screen-mid: #605b55; --screen-lo: #171513;
+    --title-ink: #f2f2f2; --extrude: #040404;
+    --t-gold: #d9b65c; --t-silver: #c3c9cf; --t-bronze: #c08a5c; --t-trash: #9da26b;
+    --t-fire: #c9774f; --t-grave: #8d8a90; --t-fail: #b9574f;
+    --x-gold: #e3c47a; --x-silver: #cdd2d7; --x-bronze: #d09c70; --x-trash: #b0b47f;
+    --x-fire: #d98d68; --x-grave: #a29fa5; --x-fail: #d77a71;
+    --on-light: #0b0b0b; --on-dark: #f4f4f4; --on-grave: #0c0b0a; --fail-edge: transparent;
+    --neg: #d77a71; --good: #a9c79a; --warn: #d9b65c;
+    --grain: .16;
+    --f-title: "Noto Serif Display", "Bodoni 72", Didot, Georgia, serif;
+    --title-axes: "wght" 900, "wdth" 62.5;
+    --title-weight: 900;
+    --f-script: "Yellowtail", "Brush Script MT", cursive;
+    --f-ui: "Jost", Futura, "Century Gothic", "Helvetica Neue", sans-serif;
+    --f-type: "Special Elite", "American Typewriter", "Courier New", monospace;
+    color-scheme: dark;
   }
+
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
+    background: var(--page);
     color: var(--ink);
-    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--f-ui);
     font-size: 15px;
     line-height: 1.5;
   }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 48px; }
-
-  /* ---------- header ---------- */
-  header { text-align: center; padding: 20px 0 24px; }
-  .film {
-    height: 14px;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    background: repeating-linear-gradient(90deg,
-      transparent 0 7px, var(--line) 7px 17px, transparent 17px 24px);
+  /* film grain over the whole page */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: -60px;
+    pointer-events: none;
+    z-index: 30;
+    opacity: calc(var(--grain) * .45);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .wrap {
+    max-width: 1120px;
     margin: 0 auto;
-    max-width: 560px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 16px 64px;
+    display: grid;
+    gap: 44px;
   }
-  .eyebrow {
-    margin: 18px 0 4px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  h1 {
-    margin: 0;
-    font-family: "Anton", "Archivo", sans-serif;
-    font-weight: 400;
-    font-size: clamp(44px, 9vw, 76px);
-    line-height: 1.05;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    text-wrap: balance;
-  }
-  h1 .g { color: var(--gold); }
-  h1 .or { color: var(--muted); font-size: 0.55em; vertical-align: middle; padding: 0 0.15em; }
-  h1 .v { color: var(--grave); }
-  .ladder {
-    margin: 10px auto 18px;
-    font-family: "Anton", "Archivo", sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px;
-  }
-  .ladder b { font-weight: 400; }
-  .t-gold { color: var(--gold); } .t-silver { color: var(--silver); }
-  .t-bronze { color: var(--bronze); } .t-trash { color: var(--trash); }
-  .t-fire { color: var(--fire); } .t-grave { color: var(--grave); }
-  .t-fail { color: var(--fail); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dim { color: var(--muted); }
+  p { margin: 0; }
 
-  /* ---------- sections ---------- */
-  section { margin-top: 28px; }
+
+  /* ---------- title card ---------- */
+  .card-frame { background: #000; border-radius: 20px; padding: clamp(8px, 1.6vw, 16px); }
+  .card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 34px / 26px;
+    background: radial-gradient(ellipse 78% 72% at 50% 42%, var(--screen-hi) 0%, var(--screen-mid) 50%, var(--screen-lo) 100%);
+    padding: clamp(18px, 2.6vw, 30px) clamp(16px, 4vw, 52px) clamp(16px, 2.2vw, 24px);
+    color: var(--title-ink);
+    text-align: center;
+    display: grid;
+    justify-items: center;
+  }
+  .card > * { position: relative; z-index: 1; }
+  .card::after { /* vignette */
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 52%, rgba(0,0,0,.62) 100%);
+  }
+  .film { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .film.grain { z-index: 3; mix-blend-mode: overlay; }
+  .film.debris { z-index: 4; }
+  @media (prefers-reduced-motion: no-preference) {
+    body::after { animation: grain 1s steps(1, end) infinite; }
+  }
+  @keyframes grain {
+    0% { transform: translate(0, 0); } 25% { transform: translate(-4%, 3%); }
+    50% { transform: translate(3%, -5%); } 75% { transform: translate(-2%, -2%); }
+  }
+  .studio {
+    font-family: var(--f-script);
+    font-size: clamp(24px, 3.2vw, 36px);
+    line-height: 1.1;
+    text-shadow: -1px 1px 0 var(--extrude), -2px 2px 0 var(--extrude), -3px 3px 2px rgba(0,0,0,.35);
+  }
+  .presents, .starring, .cr {
+    font-family: var(--f-ui);
+    font-weight: 600;
+    text-transform: uppercase;
+    text-shadow: -1px 1px 0 var(--extrude);
+  }
+  .presents { font-size: clamp(11px, 1.5vw, 15px); letter-spacing: .34em; margin-top: 4px; }
+  h1 {
+    margin: .3em 0 .42em;
+    font-family: var(--f-title);
+    font-style: italic;
+    font-weight: var(--title-weight);
+    font-variation-settings: var(--title-axes);
+    font-size: clamp(50px, 8vw, 104px);
+    line-height: .9;
+    letter-spacing: 0;
+    text-wrap: balance;
+    color: var(--title-ink);
+    transform: rotate(-5deg);
+    text-shadow:
+      -.008em .008em 0 var(--extrude), -.016em .016em 0 var(--extrude), -.024em .024em 0 var(--extrude),
+      -.032em .032em 0 var(--extrude), -.040em .040em 0 var(--extrude), -.048em .048em 0 var(--extrude),
+      -.056em .056em 0 var(--extrude), -.064em .064em 0 var(--extrude), -.072em .072em 0 var(--extrude),
+      -.080em .080em 0 var(--extrude), -.088em .088em 0 var(--extrude), -.096em .096em 0 var(--extrude),
+      -.17em .17em .22em rgba(0,0,0,.45);
+  }
+  @media (min-width: 720px) { h1 { white-space: nowrap; } } /* one line on desktop; phones may wrap */
+  .starring { font-size: clamp(12px, 1.5vw, 15px); letter-spacing: .26em; }
+  .credits { display: grid; gap: 4px; margin-top: clamp(12px, 1.8vw, 18px); }
+  .cr { font-size: clamp(10px, 1.2vw, 12px); letter-spacing: .24em; opacity: .9; }
+  .cr.lead { font-size: clamp(14px, 1.9vw, 20px); letter-spacing: .16em; opacity: 1; }
+
+  /* every display element uses the title face, condensed */
+  h2, .pname, .ptotal, td.rank, td.who, td.gross, .prices .amt, .winner b, .foot h3 {
+    font-family: var(--f-title);
+    font-style: italic;
+    font-weight: var(--title-weight);
+    font-variation-settings: var(--title-axes);
+  }
+
+  /* ---------- section heads + controls ---------- */
   .sec-head {
-    display: flex; flex-wrap: wrap; align-items: center;
-    justify-content: space-between; gap: 10px; margin-bottom: 14px;
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    justify-content: space-between; gap: 12px 16px;
+    margin-bottom: 16px;
   }
   h2 {
     margin: 0;
-    font-family: "Anton", "Archivo", sans-serif;
-    font-weight: 400;
-    font-size: 22px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-family: var(--f-title);
+    font-style: italic;
+    font-weight: 900;
+    font-size: clamp(38px, 5.4vw, 54px);
+    line-height: 1;
+    text-wrap: balance;
+    text-shadow: -1px 1px 0 var(--extrude), -2px 2px 0 var(--extrude), -3px 3px 0 var(--extrude);
   }
-  h2 small { color: var(--muted); font-size: 13px; letter-spacing: 0.1em; }
-
-  .controls { display: flex; align-items: center; gap: 6px; }
-  .controls button, .actions button, .data-actions button {
-    font: inherit; font-weight: 600; font-size: 13px;
+  .sub { font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .btn {
+    font: 600 12px/1 var(--f-ui);
+    letter-spacing: .14em;
+    text-transform: uppercase;
     color: var(--ink);
-    background: var(--panel2);
+    background: var(--panel-2);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 7px 12px;
+    border-radius: 3px;
+    padding: 11px 13px;
     cursor: pointer;
   }
-  .controls button:hover, .actions button:hover, .data-actions button:hover { border-color: var(--muted); }
-  .actions button.primary { background: var(--gold); border-color: var(--gold); color: var(--darkink); }
-  .actions button.primary:hover { border-color: var(--ink); }
-  .controls input[type="date"] {
-    font: inherit; font-size: 13px; font-weight: 600;
+  .btn:hover { border-color: var(--muted); }
+  .btn.icon { font-size: 16px; letter-spacing: 0; padding: 8px 12px; }
+  .btn.danger { background: var(--ink); border-color: transparent; color: var(--page); }
+  .btn.ghost { background: transparent; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  input[type="date"], textarea {
+    font: 500 13px var(--f-ui);
     color: var(--ink);
-    background: var(--panel2);
+    background: var(--panel-2);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px 8px;
-    color-scheme: dark;
+    border-radius: 3px;
+    padding: 8px 9px;
   }
-  button:focus-visible, input:focus-visible, tr.clickable:focus-visible {
-    outline: 2px solid var(--gold); outline-offset: 2px;
+  .link {
+    font: inherit; font-weight: 600;
+    color: var(--ink);
+    background: none; border: 0; padding: 2px 0;
+    cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
   }
 
-  /* ---------- player cards ---------- */
-  .players {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-    gap: 14px;
+  /* ---------- seat + sync bar ---------- */
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 16px; }
+  .seat { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .seat b { color: var(--ink); }
+  .chip {
+    font: 600 13px/1 var(--f-ui);
+    color: var(--ink); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 3px;
+    padding: 8px 14px; cursor: pointer;
   }
-  .pcard {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 14px 14px 10px;
-  }
-  .pcard-head {
-    display: flex; align-items: baseline; justify-content: space-between;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 8px; margin-bottom: 10px;
-  }
-  .pname {
-    font-family: "Anton", "Archivo", sans-serif;
-    font-size: 20px; letter-spacing: 0.06em; text-transform: uppercase;
-  }
-  .psub { font-size: 12px; color: var(--muted); margin-left: 8px; }
-  .ptotal {
-    font-family: "Anton", "Archivo", sans-serif;
-    font-size: 30px;
-    font-variant-numeric: tabular-nums;
-  }
-  .ptotal.neg { color: var(--fail); }
-  .ptotal.pos { color: var(--ink); }
-  .prow { padding: 6px 0 8px; }
-  .prow + .prow { border-top: 1px dashed var(--line); }
-  .prow-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
-  .mname { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .rpts { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .seg { display: flex; gap: 4px; }
-  .seg button {
-    flex: 1 1 0;
+  .chip:hover, .chip.on { border-color: var(--accent); }
+  .sync { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .sync .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .sync[data-s="live"] .dot { background: var(--good); box-shadow: 0 0 6px var(--good); }
+  .sync[data-s="saving"] .dot { background: var(--accent); }
+  .sync[data-s="stale"] .dot, .sync[data-s="offline"] .dot { background: var(--warn); }
+
+  /* ---------- lobby-card tickets ---------- */
+  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr)); gap: 18px; }
+  .tickets[aria-busy="true"] { opacity: .65; }
+  .ticket {
+    position: relative;
     min-width: 0;
-    height: 36px;
-    font: inherit; font-weight: 700; font-size: 14px;
+    background: var(--panel);
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--line), inset 0 0 0 6px var(--panel), inset 0 0 0 7px var(--line);
+  }
+  .ticket.mine { box-shadow: inset 0 0 0 1px var(--accent), inset 0 0 0 6px var(--panel), inset 0 0 0 7px var(--line); }
+  .stub { padding: 16px 20px 14px; display: grid; gap: 6px; }
+  .stub-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-family: var(--f-type);
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-height: 26px;
+  }
+  .stamp {
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 2px;
+    padding: 1px 7px;
+    transform: rotate(-6deg);
+  }
+  .stub-main { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .pname {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-title); font-style: italic; font-weight: 900;
+    font-size: 50px; line-height: 1;
+    text-shadow: -1px 1px 0 var(--extrude), -2px 2px 0 var(--extrude), -3px 3px 0 var(--extrude);
+  }
+  .you {
+    font: 700 10px/1 var(--f-ui);
+    font-style: normal;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    text-shadow: none;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 2px;
+    padding: 5px 7px 4px;
+  }
+  .ptotal {
+    font-family: var(--f-title); font-style: italic; font-weight: 900;
+    font-size: 54px; line-height: 1;
+    font-variant-numeric: lining-nums tabular-nums;
+    text-shadow: -1px 1px 0 var(--extrude), -2px 2px 0 var(--extrude), -3px 3px 0 var(--extrude);
+  }
+  .ptotal.neg { color: var(--neg); }
+  .ptotal.empty { color: var(--muted); }
+  .stub-sub { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted); }
+  .perf { position: relative; margin: 0 18px; border-top: 2px dashed var(--line); }
+  .perf::before, .perf::after {
+    content: ""; position: absolute; top: -11px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--page);
+    border: 1px solid var(--line);
+  }
+  .perf::before { left: -29px; clip-path: inset(0 0 0 50%); }
+  .perf::after { right: -29px; clip-path: inset(0 50% 0 0); }
+  .modes { padding: 14px 20px 20px; display: grid; gap: 14px; }
+  .mode-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .mname { font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .mread { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .seg { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+  .sb {
+    height: 42px; min-width: 0; padding: 0;
+    font: 600 16px/1 var(--f-ui);
     font-variant-numeric: tabular-nums;
     color: var(--muted);
-    background: var(--panel2);
+    background: var(--panel-2);
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 3px;
     cursor: pointer;
-    padding: 0;
   }
-  .seg button:hover { border-color: var(--muted); color: var(--ink); }
-  .seg button[aria-pressed="true"] { color: var(--darkink); border-color: transparent; }
-  .seg button.on-1 { background: var(--gold); }
-  .seg button.on-2 { background: var(--silver); }
-  .seg button.on-3 { background: var(--bronze); }
-  .seg button.on-4 { background: var(--trash); }
-  .seg button.on-5 { background: var(--fire); }
-  .seg button.on-6 { background: var(--grave); }
-  .seg button.on-F { background: var(--fail); color: #fff; }
+  .sb:hover:not(:disabled) { border-color: var(--muted); color: var(--ink); }
+  .sb.on { color: var(--on-light); border-color: transparent; }
+  .sb.on.f-grave { color: var(--on-grave); }
+  .sb.on.f-fail { color: var(--on-dark); border-color: var(--fail-edge); }
+  .sb:disabled { cursor: not-allowed; }
+  .sb:disabled:not(.on) { opacity: .5; }
+  .f-gold { background: var(--t-gold); } .f-silver { background: var(--t-silver); }
+  .f-bronze { background: var(--t-bronze); } .f-trash { background: var(--t-trash); }
+  .f-fire { background: var(--t-fire); } .f-grave { background: var(--t-grave); }
+  .f-fail { background: var(--t-fail); }
+  .t-gold { color: var(--x-gold); } .t-silver { color: var(--x-silver); }
+  .t-bronze { color: var(--x-bronze); } .t-trash { color: var(--x-trash); }
+  .t-fire { color: var(--x-fire); } .t-grave { color: var(--x-grave); }
+  .t-fail { color: var(--x-fail); }
+  @media (prefers-reduced-motion: no-preference) {
+    .sb, .btn, .chip { transition: border-color 120ms, color 120ms, background-color 120ms; }
+  }
 
-  /* ---------- day footer ---------- */
-  .day-foot {
-    margin-top: 14px;
-    display: flex; flex-wrap: wrap; align-items: center;
-    justify-content: space-between; gap: 10px;
+  .dayfoot {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px;
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line);
   }
-  .winner { font-size: 15px; font-weight: 600; min-height: 1.5em; }
-  .winner .why { color: var(--muted); font-weight: 400; }
-  .actions { display: flex; align-items: center; gap: 8px; }
-  .tick { font-size: 12px; color: var(--trash); font-weight: 600; min-width: 60px; }
+  .winner { font-size: 16px; min-width: 0; }
+  .winner b { font-family: var(--f-title); font-style: italic; font-weight: 900; font-size: 19px; }
+  .actions, .confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .confirm span { font-size: 14px; font-weight: 600; }
+  #recapOut { width: 100%; margin-top: 12px; font-family: var(--f-type); }
 
-  /* ---------- weekly ---------- */
-  .standings {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
-    margin-bottom: 16px;
-  }
-  .scard {
+  /* ---------- trade report + admission board ---------- */
+  .split { display: grid; gap: 28px; }
+  @media (min-width: 880px) { .split { grid-template-columns: minmax(0, 2.1fr) minmax(250px, 1fr); align-items: start; } }
+  .tablewrap {
+    overflow-x: auto;
     background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 14px;
-    display: flex; align-items: center; gap: 14px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--line);
   }
-  .scard.lead { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-  .rank {
-    font-family: "Anton", "Archivo", sans-serif;
-    font-size: 15px; color: var(--muted); width: 34px; flex: none;
-    text-transform: uppercase; letter-spacing: 0.04em;
-  }
-  .scard.lead .rank { color: var(--gold); }
-  .sname {
-    font-family: "Anton", "Archivo", sans-serif;
-    font-size: 19px; letter-spacing: 0.05em; text-transform: uppercase;
-  }
-  .sstat { font-size: 12px; color: var(--muted); }
-  .stotal {
-    margin-left: auto;
-    font-family: "Anton", "Archivo", sans-serif;
-    font-size: 34px;
-    font-variant-numeric: tabular-nums;
-  }
-  .stotal.neg { color: var(--fail); }
-
-  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
-  table { width: 100%; border-collapse: collapse; background: var(--panel); font-variant-numeric: tabular-nums; }
-  th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: lining-nums tabular-nums; }
+  th, td { padding: 10px 12px; text-align: right; white-space: nowrap; }
   th {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--muted); border-bottom: 1px solid var(--line);
+    font: 600 11px var(--f-ui);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 3px double var(--line);
   }
-  th:first-child, td:first-child { text-align: left; }
+  th.l, td.l { text-align: left; }
   tbody tr + tr td { border-top: 1px solid var(--line); }
-  tr.clickable { cursor: pointer; }
-  tr.clickable:hover td { background: var(--panel2); }
-  tr.today td { background: var(--panel2); }
-  td.dim { color: var(--muted); }
-  td.win { font-weight: 700; color: var(--gold); }
+  td.rank { font-family: var(--f-title); font-style: italic; font-weight: 900; font-size: 26px; line-height: 1; width: 1%; }
+  td.lw { color: var(--muted); font-size: 13px; width: 1%; }
+  tr.lead td.rank { color: var(--accent); }
+  td.who { font-family: var(--f-title); font-style: italic; font-weight: 900; font-size: 22px; line-height: 1; }
+  td.gross { font-family: var(--f-title); font-style: italic; font-weight: 900; font-size: 24px; line-height: 1; }
+  td.neg { color: var(--neg); }
+  td.sel, th.sel { background: var(--panel-2); }
+  td.won { font-weight: 700; color: var(--accent); }
+  .thb {
+    font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit;
+    background: none; border: 0; padding: 0; cursor: pointer;
+  }
+  .thb:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+  .prices {
+    background: #050505;
+    color: #f2f2f2;
+    border-radius: 6px;
+    padding: 20px 20px 16px;
+    box-shadow: inset 0 0 0 1px #2c2c2c, inset 0 0 0 6px #050505, inset 0 0 0 7px #2c2c2c;
+    background-image: repeating-linear-gradient(0deg, transparent 0 29px, #141414 29px 30px);
+  }
+  .prices h2 { font-size: 32px; color: inherit; }
+  .prices .sub { color: #9a9a9a; }
+  .prices ol { list-style: none; margin: 14px 0 12px; padding: 0; display: grid; gap: 6px; }
+  .prices li {
+    display: grid;
+    grid-template-columns: 22px auto minmax(12px, 1fr) auto;
+    align-items: baseline;
+    gap: 8px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  .prices .g { font-family: var(--f-type); color: #9a9a9a; letter-spacing: 0; }
+  .prices .dots { border-bottom: 2px dotted #3a3a3a; transform: translateY(-5px); }
+  .prices .amt { font-family: var(--f-title); font-style: italic; font-weight: 900; font-size: 22px; letter-spacing: 0; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+  .fine { font-size: 13px; color: var(--muted); }
+  .prices .fine { color: #9a9a9a; }
 
   /* ---------- footer ---------- */
-  footer { margin-top: 34px; border-top: 1px solid var(--line); padding-top: 18px; }
-  .rules { font-size: 13px; color: var(--muted); max-width: 62ch; }
-  .alltime { font-size: 13px; color: var(--muted); margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
-  .alltime b { color: var(--ink); }
-  .reponote { font-size: 12px; color: var(--muted); margin: 0 0 10px; }
-  .data-actions { display: flex; gap: 8px; }
-  .data-actions button { font-size: 12px; padding: 6px 10px; color: var(--muted); }
+  .foot { display: grid; gap: 22px; padding-top: 22px; border-top: 3px double var(--line); }
+  @media (min-width: 880px) { .foot { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } }
+  .foot h3 { margin: 0 0 6px; font-family: var(--f-title); font-style: italic; font-weight: 900; font-size: 26px; }
+  .rules p { font-size: 14px; color: var(--muted); max-width: 64ch; }
+  .rules p + p { margin-top: 8px; }
+  details summary { cursor: pointer; font-weight: 600; letter-spacing: .06em; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { font-size: 13px; color: var(--muted); }
+  #importText { width: 100%; margin: 10px 0 8px; font-family: var(--f-type); }
+  #importMsg { margin-top: 8px; font-size: 13px; }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .seg button, .controls button, .actions button { transition: border-color 120ms, color 120ms; }
+  .toast {
+    position: fixed; left: 50%;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    width: max-content; max-width: min(92vw, 460px);
+    background: var(--ink); color: var(--page);
+    padding: 11px 16px; border-radius: 3px;
+    font-weight: 600; font-size: 14px;
+    z-index: 40;
   }
 </style>
+<script src="firebase-config.js"></script>
+</head>
+<body>
 
 <div class="wrap">
-  <header>
-    <div class="film" aria-hidden="true"></div>
-    <p class="eyebrow">framed.wtf · house rules v2 · the weekly gross runs Mon–Fri</p>
-    <h1><span class="or">The</span> <span class="g">Box</span> <span class="v">Office</span></h1>
-    <p class="ladder">
-      <b class="t-gold">Gold $10M</b><b class="t-silver">Silver $7M</b><b class="t-bronze">Bronze $5M</b><b class="t-trash">Trash $3M</b><b class="t-fire">Dumpster Fire $2M</b><b class="t-grave">Grave $1M</b><b class="t-fail">Fail −$2M</b>
-    </p>
-    <div class="film" aria-hidden="true"></div>
+
+  <header class="card-frame" id="marquee">
+    <div class="card">
+      <p class="studio">Framed Pictures Corporation</p>
+      <p class="presents">presents</p>
+      <h1>“The Box Office”</h1>
+      <p class="starring">Starring Nick · David · Nate</p>
+      <div class="credits">
+        <p class="cr lead" id="rb2">Loading the weekly gross</p>
+        <p class="cr" id="rb1">Week of Nov 9–13</p>
+      </div>
+    </div>
   </header>
 
-  <section aria-label="Daily card">
+  <section aria-labelledby="dayTitle">
     <div class="sec-head">
-      <h2>The daily numbers <small id="dayLabel"></small></h2>
+      <div>
+        <h2 id="dayTitle">Today's tickets</h2>
+        <p class="sub" id="daySub"></p>
+      </div>
       <div class="controls">
-        <button id="prevDay" aria-label="Previous day">‹</button>
+        <button type="button" class="btn icon" id="prevDay" aria-label="Previous day">‹</button>
         <input type="date" id="datePick" aria-label="Pick a date">
-        <button id="nextDay" aria-label="Next day">›</button>
-        <button id="todayBtn">Today</button>
+        <button type="button" class="btn icon" id="nextDay" aria-label="Next day">›</button>
+        <button type="button" class="btn" id="todayBtn">Today</button>
       </div>
     </div>
-    <div class="players" id="players"></div>
-    <div class="day-foot">
-      <div class="winner" id="winnerLine"></div>
-      <div class="actions">
-        <span class="tick" id="saveTick" role="status"></span>
-        <button id="copyBtn">Copy recap</button>
-        <button id="publishBtn" class="primary">Publish</button>
-        <button id="clearBtn">Clear day</button>
+    <div class="bar">
+      <div class="seat" id="seat"></div>
+      <p class="sync" id="sync" data-s="connecting" role="status"><span class="dot"></span><span id="syncText">Connecting to the box office…</span></p>
+    </div>
+    <div class="tickets" id="tickets" aria-busy="true"></div>
+    <div class="dayfoot">
+      <p class="winner" id="winner"></p>
+      <div class="actions" id="actions">
+        <button type="button" class="btn" id="copyBtn">Copy recap</button>
+        <button type="button" class="btn ghost" id="clearBtn">Clear day</button>
+      </div>
+      <div class="confirm" id="confirm" hidden>
+        <span id="confirmText"></span>
+        <button type="button" class="btn danger" id="confirmYes">Clear for everyone</button>
+        <button type="button" class="btn" id="confirmNo">Keep it</button>
       </div>
     </div>
+    <textarea id="recapOut" rows="5" readonly hidden aria-label="Recap text to copy"></textarea>
   </section>
 
-  <section aria-label="Weekly standings">
+  <div class="split">
+    <section aria-labelledby="weekTitle">
+      <div class="sec-head">
+        <div>
+          <h2 id="weekTitle">The weekly gross</h2>
+          <p class="sub" id="weekSub"></p>
+        </div>
+        <div class="controls">
+          <button type="button" class="btn" id="prevWeek">‹ Week</button>
+          <button type="button" class="btn" id="nextWeek">Week ›</button>
+        </div>
+      </div>
+      <div class="tablewrap">
+        <table id="weekTable" aria-label="This week's chart">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note" id="weekNote"></p>
+    </section>
+
+    <aside class="prices" aria-labelledby="priceTitle">
+      <h2 id="priceTitle">Ticket prices</h2>
+      <p class="sub">Per mode, by the guess you solved on</p>
+      <ol>
+        <li><span class="g">1</span><span class="t-gold">Gold</span><span class="dots"></span><span class="amt">$10M</span></li>
+        <li><span class="g">2</span><span class="t-silver">Silver</span><span class="dots"></span><span class="amt">$7M</span></li>
+        <li><span class="g">3</span><span class="t-bronze">Bronze</span><span class="dots"></span><span class="amt">$5M</span></li>
+        <li><span class="g">4</span><span class="t-trash">Trash</span><span class="dots"></span><span class="amt">$3M</span></li>
+        <li><span class="g">5</span><span class="t-fire">Dumpster Fire</span><span class="dots"></span><span class="amt">$2M</span></li>
+        <li><span class="g">6</span><span class="t-grave">Grave</span><span class="dots"></span><span class="amt">$1M</span></li>
+        <li><span class="g">✕</span><span class="t-fail">Fail</span><span class="dots"></span><span class="amt t-fail">−$2M</span></li>
+      </ol>
+      <p class="fine">A skipped mode counts as a fail. A fail is the only way into the red.</p>
+    </aside>
+  </div>
+
+  <section aria-labelledby="lifeTitle">
     <div class="sec-head">
-      <h2>The weekly gross <small id="weekLabel"></small></h2>
-      <div class="controls">
-        <button id="prevWeek" aria-label="Previous week">‹ Week</button>
-        <button id="nextWeek" aria-label="Next week">Week ›</button>
+      <div>
+        <h2 id="lifeTitle">Lifetime grosses</h2>
+        <p class="sub" id="lifeSub"></p>
       </div>
     </div>
-    <div class="standings" id="standings"></div>
     <div class="tablewrap">
-      <table id="weekTable" aria-label="Days this week">
-        <thead><tr><th>Day</th><th>Nick</th><th>David</th><th>Nate</th><th>Day win</th></tr></thead>
+      <table id="lifeTable" aria-label="Lifetime totals">
+        <thead>
+          <tr><th class="l">Player</th><th>Gross</th><th>Weekly titles</th><th>Golds</th><th>Fails</th><th>Best day</th><th>Days played</th></tr>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
   </section>
 
-  <footer>
-    <p class="rules">A fail is the only way to go into the red — a 6 is ugly, but it still sells tickets; a fail loses money.
-    A skipped mode counts as a fail. Daily tiebreakers: more modes solved, then best single mode, then it's a tie.
-    Daily wins are bragging rights; the weekly gross is the title.</p>
-    <p class="alltime" id="alltime"></p>
-    <p class="reponote" id="repoNote"></p>
-    <div class="data-actions">
-      <button id="exportBtn">Export data</button>
-      <button id="importBtn">Import data</button>
+  <footer class="foot">
+    <div class="rules">
+      <h3>House rules v2</h3>
+      <p>Each mode pays out by the guess you solved on. Daily score is the four modes added up, from $40M at best to −$8M at worst. A lucky guess counts. Knowing the movie but not its name does not.</p>
+      <p>Daily ties go to more modes solved, then the best single mode. The weekly gross runs Monday to Friday and the title goes to the top gross once Friday is over. Weekend days count toward lifetime only.</p>
     </div>
+    <details class="import" id="importBox">
+      <summary>Bring in scores from the old page</summary>
+      <p>Paste scores exported from an earlier Box Office page (Export data). Days already on this board stay as they are.</p>
+      <textarea id="importText" rows="4" placeholder='{"version":2,"days":{...}}' aria-label="Exported scores"></textarea>
+      <button type="button" class="btn" id="importBtn">Import scores</button>
+      <p id="importMsg" role="status"></p>
+    </details>
   </footer>
 </div>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script>
-(function () {
+(() => {
   "use strict";
 
-  // ----- rubric (v2). Raw results are stored (1-6 or null); points are always recomputed. -----
-  var PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 2, 6: 1 };
-  var TIER = { 1: "Gold", 2: "Silver", 3: "Bronze", 4: "Trash", 5: "Dumpster Fire", 6: "Grave" };
-  var TIERC = { 1: "gold", 2: "silver", 3: "bronze", 4: "trash", 5: "fire", 6: "grave" }; // CSS class slugs
-  function points(r) { return PTS[r] !== undefined ? PTS[r] : -2; } // null/undefined/skip = fail = -2
+  // ----- rubric v2. Raw guesses are stored (1-6, or null for a fail); points are always recomputed. -----
+  const PTS = { 1: 10, 2: 7, 3: 5, 4: 3, 5: 2, 6: 1 };
+  const TIER = { 1: "Gold", 2: "Silver", 3: "Bronze", 4: "Trash", 5: "Dumpster Fire", 6: "Grave" };
+  const TC = { 1: "gold", 2: "silver", 3: "bronze", 4: "trash", 5: "fire", 6: "grave" };
+  const points = r => (PTS[r] !== undefined ? PTS[r] : -2); // null, missing or skipped = fail = -2
 
-  var MODES = [
+  const MODES = [
     { id: "framed", name: "Framed" },
     { id: "oneframe", name: "One Frame" },
     { id: "title", name: "Title" },
     { id: "poster", name: "Poster" }
   ];
-  var PLAYERS = [
-    { id: "nick", name: "Nick" },
-    { id: "david", name: "David" },
-    { id: "nate", name: "Nate" }
+  const PLAYERS = [
+    { id: "nick", name: "Nick", ini: "NF" },
+    { id: "david", name: "David", ini: "DR" },
+    { id: "nate", name: "Nate", ini: "NK" }
   ];
+  const NAME = Object.fromEntries(PLAYERS.map(p => [p.id, p.name]));
+  const COLL = "scores";          // one doc per player per day: scores/2026-11-09_nick
+  const ME_KEY = "box-office-me"; // which ticket is yours (also kept in your private db prefs)
 
-  var STORE_KEY = "gold-or-grave";
+  const $ = id => document.getElementById(id);
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked */ } };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // ----- storage -----
-  function loadData() {
-    try {
-      var raw = localStorage.getItem(STORE_KEY);
-      if (raw) { var d = JSON.parse(raw); if (d && d.days) return d; }
-    } catch (e) { /* private mode etc. */ }
-    return { version: 2, days: {} };
-  }
-  function saveData() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); flashTick("Saved"); }
-    catch (e) { flashTick("Not saved — storage unavailable"); }
-    schedulePublish();
-  }
+  // ----- dates (local time) -----
+  const pad = n => String(n).padStart(2, "0");
+  const fmtISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayISO = () => fmtISO(new Date());
+  const parseISO = iso => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return fmtISO(d); };
+  const mondayOf = iso => { const d = parseISO(iso); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return fmtISO(d); };
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const shortDate = iso => { const d = parseISO(iso); return `${MON[d.getMonth()]} ${d.getDate()}`; };
+  const longDay = iso => { const d = parseISO(iso); return `${DOW[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`; };
+  const chatDate = iso => { const d = parseISO(iso); return `${d.getMonth() + 1}/${d.getDate()}`; };
+  const weekDays = mon => [0, 1, 2, 3, 4].map(i => addDays(mon, i)); // the title runs Mon-Fri
+  const weekRange = mon => {
+    const fri = addDays(mon, 4), a = parseISO(mon), b = parseISO(fri);
+    return a.getMonth() === b.getMonth() ? `${shortDate(mon)}–${b.getDate()}` : `${shortDate(mon)}–${shortDate(fri)}`;
+  };
+  const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
-  var data = loadData();
-  var selected = todayISO();
+  // scores display as box-office millions; stored data stays raw guesses
+  const money = n => (n < 0 ? "−$" : "$") + Math.abs(n) + "M";
+  const moneyChat = n => (n < 0 ? "-$" : "$") + Math.abs(n) + "M";
+  const moneySigned = n => (n >= 0 ? "+$" : "-$") + Math.abs(n) + "M";
 
-  // ----- dates -----
-  function todayISO() { return fmtISO(new Date()); }
-  function fmtISO(d) {
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  // ----- state -----
+  const remote = new Map(); // "date_player" -> { date, player, modes, by }   (what the shared board says)
+  const local = new Map();  // "date_player" -> modes                          (taps still being saved)
+  let selected = todayISO();
+  let me = NAME[lsGet(ME_KEY)] ? lsGet(ME_KEY) : null;
+  let changingSeat = false;
+  let db = null, uid = null;
+  let conn = "connecting"; // connecting | live | stale | offline | readonly | nodb
+  let readOnly = false;
+  let loaded = false;
+
+  const keyOf = (date, pid) => `${date}_${pid}`;
+  function entry(date, pid) {
+    const k = keyOf(date, pid);
+    if (local.has(k)) return local.get(k);
+    const r = remote.get(k);
+    return r ? r.modes : undefined;
   }
-  function parseISO(iso) {
-    var p = iso.split("-");
-    return new Date(+p[0], +p[1] - 1, +p[2]);
+  const getResult = (date, pid, mid) => { const e = entry(date, pid); return e ? e[mid] : undefined; };
+  const hasAny = e => !!e && MODES.some(m => e[m.id] !== undefined);
+  function enteredBy(date, pid) {
+    const r = remote.get(keyOf(date, pid));
+    return r && r.by && r.by !== pid && NAME[r.by] ? r.by : null;
   }
-  function addDays(iso, n) { var d = parseISO(iso); d.setDate(d.getDate() + n); return fmtISO(d); }
-  function mondayOf(iso) { var d = parseISO(iso); var off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); return fmtISO(d); }
-  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  var DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  function shortDate(iso) { var d = parseISO(iso); return MON[d.getMonth()] + " " + d.getDate(); }
-  function chatDate(iso) { var d = parseISO(iso); return (d.getMonth() + 1) + "/" + d.getDate(); }
+  function allDates() {
+    const s = new Set();
+    remote.forEach(v => s.add(v.date));
+    local.forEach((v, k) => s.add(k.slice(0, 10)));
+    return [...s];
+  }
+  const canWrite = () => !!db && loaded && !readOnly;
 
   // ----- scoring -----
-  function dayEntry(iso) { return data.days[iso] || null; }
-  function getResult(iso, pid, mid) {
-    var e = dayEntry(iso);
-    if (!e || !e[pid]) return undefined;      // untouched
-    return e[pid][mid];                        // 1-6, null (fail), or undefined
-  }
   function playerDay(iso, pid) {
-    var total = 0, solved = 0, best = -2;
-    MODES.forEach(function (m) {
-      var r = getResult(iso, pid, m.id);
-      var p = points(r);
+    let total = 0, solved = 0, best = -2;
+    MODES.forEach(m => {
+      const r = getResult(iso, pid, m.id), p = points(r);
       total += p;
       if (PTS[r] !== undefined) solved++;
       if (p > best) best = p;
     });
-    return { total: total, solved: solved, best: best };
+    return { total, solved, best };
   }
-  function dayTouched(iso) {
-    var e = dayEntry(iso);
-    if (!e) return false;
-    return PLAYERS.some(function (pl) {
-      return e[pl.id] && MODES.some(function (m) { return e[pl.id][m.id] !== undefined; });
-    });
-  }
-  // Sort by points, then tiebreakers: more modes solved, then best single mode.
-  function rankPlayers(scores) {
-    return PLAYERS.map(function (pl) {
-      var s = scores[pl.id];
-      return { id: pl.id, name: pl.name, total: s.total, solved: s.solved, best: s.best };
-    }).sort(function (a, b) {
-      return (b.total - a.total) || (b.solved - a.solved) || (b.best - a.best);
-    });
-  }
+  const dayTouched = iso => PLAYERS.some(p => hasAny(entry(iso, p.id)));
   function dayWinner(iso) {
-    var scores = {};
-    PLAYERS.forEach(function (pl) { scores[pl.id] = playerDay(iso, pl.id); });
-    var r = rankPlayers(scores);
-    var a = r[0], b = r[1];
+    const r = PLAYERS.map(p => ({ id: p.id, name: p.name, ...playerDay(iso, p.id) }))
+      .sort((a, b) => (b.total - a.total) || (b.solved - a.solved) || (b.best - a.best));
+    const a = r[0], b = r[1];
     if (a.total === b.total && a.solved === b.solved && a.best === b.best) {
-      var tied = r.filter(function (x) { return x.total === a.total && x.solved === a.solved && x.best === a.best; });
-      return { tie: true, tied: tied, ranked: r };
+      return { tie: true, tied: r.filter(x => x.total === a.total && x.solved === a.solved && x.best === a.best), ranked: r };
     }
-    var why = "on points";
-    if (a.total === b.total) {
-      why = a.solved !== b.solved ? "tiebreak: more modes solved" : "tiebreak: best single mode";
-    }
-    return { tie: false, winner: a, why: why, ranked: r };
+    let why = "on points";
+    if (a.total === b.total) why = a.solved !== b.solved ? "tiebreak: more modes solved" : "tiebreak: best single mode";
+    return { tie: false, winner: a, why, ranked: r };
   }
-  function weekDays(monISO) { // the title runs Mon-Fri; weekends don't count toward the weekly gross
-    var out = [];
-    for (var i = 0; i < 5; i++) out.push(addDays(monISO, i));
-    return out;
-  }
-  function weekTotals(monISO) {
-    var totals = {}, days = 0;
-    PLAYERS.forEach(function (pl) { totals[pl.id] = 0; });
-    weekDays(monISO).forEach(function (iso) {
+  function weekTotals(mon) {
+    const totals = {}; let days = 0;
+    PLAYERS.forEach(p => { totals[p.id] = 0; });
+    weekDays(mon).forEach(iso => {
       if (!dayTouched(iso)) return;
       days++;
-      PLAYERS.forEach(function (pl) { totals[pl.id] += playerDay(iso, pl.id).total; });
+      PLAYERS.forEach(p => { totals[p.id] += playerDay(iso, p.id).total; });
     });
-    return { totals: totals, days: days };
+    return { totals, days };
+  }
+  function rankLabels(totals) {
+    const vals = PLAYERS.map(p => totals[p.id]), out = {};
+    PLAYERS.forEach(p => {
+      const higher = vals.filter(v => v > totals[p.id]).length;
+      const same = vals.filter(v => v === totals[p.id]).length;
+      out[p.id] = (same > 1 ? "T-" : "") + (higher + 1);
+    });
+    return out;
+  }
+  // A title is awarded once that week's Friday has passed, to a single top gross.
+  function weekTitle(mon) {
+    if (addDays(mon, 4) >= todayISO()) return { final: false };
+    const wt = weekTotals(mon);
+    if (!wt.days) return { final: true, none: true };
+    const best = Math.max(...PLAYERS.map(p => wt.totals[p.id]));
+    const top = PLAYERS.filter(p => wt.totals[p.id] === best);
+    return { final: true, winner: top.length === 1 ? top[0] : null, tied: top, total: best };
   }
 
-  // ----- entry mutation -----
-  function setResult(iso, pid, mid, val) { // val: 1-6, null (explicit fail), or undefined (unset)
-    if (!data.days[iso]) data.days[iso] = {};
-    if (!data.days[iso][pid]) data.days[iso][pid] = {};
-    if (val === undefined) delete data.days[iso][pid][mid];
-    else data.days[iso][pid][mid] = val;
-    if (!dayTouched(iso)) delete data.days[iso];
-    saveData();
+  // ----- saving -----
+  const timers = new Map(), inflight = new Set(), dirty = new Set();
+  const busy = () => timers.size + inflight.size > 0;
+
+  function setResult(date, pid, mid, val) {
+    if (!canWrite()) return;
+    const cur = Object.assign({}, entry(date, pid) || {});
+    if (val === undefined) delete cur[mid]; else cur[mid] = val;
+    local.set(keyOf(date, pid), cur);
+    scheduleWrite(keyOf(date, pid), 450);
+    render();
+  }
+  function scheduleWrite(key, ms) {
+    clearTimeout(timers.get(key));
+    timers.set(key, setTimeout(() => flush(key), ms));
+    renderSync();
+  }
+  async function flush(key) {
+    timers.delete(key);
+    if (inflight.has(key)) { dirty.add(key); return; }
+    inflight.add(key);
+    renderSync();
+    const body = local.get(key) || {};
+    const date = key.slice(0, 10), pid = key.slice(11);
+    const ref = db.collection(COLL).doc(key);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        if (!hasAny(body)) await ref.delete();
+        else {
+          const doc = { date, player: pid, by: me || null, at: new Date().toISOString() };
+          MODES.forEach(m => { if (body[m.id] !== undefined) doc[m.id] = body[m.id]; });
+          await ref.set(doc);
+        }
+        break;
+      } catch (e) {
+        const code = e && e.code;
+        if (code === "unavailable" && attempt === 0) { await sleep(400 + Math.random() * 700); continue; }
+        if (code === "invalid_argument") {
+          readOnly = true; conn = "readonly";
+          toast("The scoreboard didn't accept that score. Reload and try again.");
+        } else if (code === "quota_exceeded") {
+          toast("The scoreboard is full. Clear some old days to make room.");
+        } else {
+          toast("That score didn't save. Check your connection, then tap it again.");
+        }
+        dirty.delete(key);
+        break;
+      }
+    }
+    inflight.delete(key);
+    if (dirty.has(key)) { dirty.delete(key); flush(key); return; }
+    if (!timers.has(key)) local.delete(key); // the live board now carries it
     render();
   }
 
   // ----- render -----
-  var $ = function (id) { return document.getElementById(id); };
-
-  // scores display as box-office millions; the stored data stays raw guesses
-  function money(n) { return (n < 0 ? "−$" : "$") + Math.abs(n) + "M"; }
-  function moneyChat(n) { return (n < 0 ? "-$" : "$") + Math.abs(n) + "M"; }       // ASCII minus for group chat
-  function moneySignedChat(n) { return (n >= 0 ? "+$" : "-$") + Math.abs(n) + "M"; }
-
-  function renderPlayers() {
-    var host = $("players");
-    host.innerHTML = "";
-    PLAYERS.forEach(function (pl) {
-      var s = playerDay(selected, pl.id);
-      var card = document.createElement("div");
-      card.className = "pcard";
-
-      var head = document.createElement("div");
-      head.className = "pcard-head";
-      head.innerHTML = '<span><span class="pname">' + pl.name + '</span>' +
-        '<span class="psub">' + s.solved + "/4 solved</span></span>";
-      var tot = document.createElement("span");
-      tot.className = "ptotal " + (s.total < 0 ? "neg" : "pos");
-      tot.textContent = money(s.total);
-      head.appendChild(tot);
-      card.appendChild(head);
-
-      MODES.forEach(function (m) {
-        var r = getResult(selected, pl.id, m.id);
-        var row = document.createElement("div");
-        row.className = "prow";
-
-        var top = document.createElement("div");
-        top.className = "prow-top";
-        var label = '<span class="mname">' + m.name + "</span>";
-        var readout = "";
-        if (r === undefined) readout = '<span class="rpts" style="color:var(--muted)">skip = fail −$2M</span>';
-        else if (r === null) readout = '<span class="rpts t-fail">Fail −$2M</span>';
-        else readout = '<span class="rpts t-' + TIERC[r] + '">' + TIER[r] + " +$" + PTS[r] + "M</span>";
-        top.innerHTML = label + readout;
-        row.appendChild(top);
-
-        var seg = document.createElement("div");
-        seg.className = "seg";
-        [1, 2, 3, 4, 5, 6, "F"].forEach(function (v) {
-          var btn = document.createElement("button");
-          btn.type = "button";
-          btn.textContent = v === "F" ? "✕" : v;
-          var isOn = (v === "F" && r === null) || (v === r);
-          btn.setAttribute("aria-pressed", isOn ? "true" : "false");
-          btn.setAttribute("aria-label", pl.name + " " + m.name + " " + (v === "F" ? "fail" : "guess " + v));
-          if (isOn) btn.className = "on-" + v;
-          btn.addEventListener("click", function () {
-            var next = isOn ? undefined : (v === "F" ? null : v);
-            setResult(selected, pl.id, m.id, next);
-          });
-          seg.appendChild(btn);
-        });
-        row.appendChild(seg);
-        card.appendChild(row);
-      });
-
-      host.appendChild(card);
-    });
+  function render() {
+    const focusId = document.activeElement && document.activeElement.id;
+    $("datePick").value = selected;
+    const isToday = selected === todayISO();
+    $("dayTitle").textContent = isToday ? "Today's tickets" : "Tickets for " + longDay(selected);
+    $("daySub").textContent = isToday ? longDay(selected) : "Today is " + longDay(todayISO());
+    renderMarquee();
+    renderSeat();
+    renderSync();
+    renderTickets();
+    renderWeek();
+    renderLifetime();
+    if (focusId && $(focusId) && document.activeElement !== $(focusId)) $(focusId).focus();
   }
 
-  function renderWinner() {
-    var el = $("winnerLine");
-    if (!dayTouched(selected)) { el.innerHTML = '<span class="why">No results entered for this day yet.</span>'; return; }
-    var w = dayWinner(selected);
-    if (w.tie) {
-      var names = w.tied.map(function (x) { return x.name; }).join(" & ");
-      el.innerHTML = "🤝 Dead heat: " + names + ' <span class="why">(' + money(w.tied[0].total) + ", same modes solved, same best mode)</span>";
+  function renderMarquee() {
+    const mon = mondayOf(selected), wt = weekTotals(mon), title = weekTitle(mon);
+    let small = "Week of " + weekRange(mon);
+    let lead;
+    if (!loaded && conn === "connecting") lead = "Loading the weekly gross";
+    else if (!wt.days) lead = "No gross yet this week";
+    else {
+      const best = Math.max(...PLAYERS.map(p => wt.totals[p.id]));
+      const top = PLAYERS.filter(p => wt.totals[p.id] === best).map(p => p.name);
+      if (title.final) lead = top.length === 1 ? `Final · ${top[0]} takes the week · ${money(best)}` : `Final · ${top.join(" & ")} tie · no title`;
+      else lead = top.length === 1 ? `${top[0]} leads the week · ${money(best)}` : `${top.join(" & ")} tied up top · ${money(best)}`;
+    }
+    $("rb2").textContent = lead;
+    const last = weekTitle(addDays(mon, -7));
+    let r3 = "";
+    if (last.final && !last.none) r3 = last.winner ? `Last week · ${last.winner.name} took the title` : "Last week · a tie, no title";
+    if (last.final && !last.none) small += " · " + r3;
+    $("rb1").textContent = small;
+  }
+
+  function renderSeat() {
+    const el = $("seat");
+    if (me && !changingSeat) {
+      el.innerHTML = `<span>Your seat: <b>${NAME[me]}</b></span><button type="button" class="link" id="seatChange">Change</button>`;
     } else {
-      el.innerHTML = "👑 " + w.winner.name + " tops the box office — " + money(w.winner.total) +
-        ' <span class="why">(' + w.why + ")</span>";
+      el.innerHTML = `<span>Which ticket is yours? It goes first, and you can still fill in the others.</span>` +
+        PLAYERS.map(p => `<button type="button" class="chip${p.id === me ? " on" : ""}" id="seat-${p.id}" data-seat="${p.id}">${p.name}</button>`).join("");
+    }
+  }
+
+  function renderSync() {
+    const el = $("sync");
+    let s = conn, text;
+    if ((conn === "live") && busy()) s = "saving";
+    switch (s) {
+      case "connecting": text = "Connecting to the box office…"; break;
+      case "live": text = "Live · David, Nate and Nick all see this board"; break;
+      case "saving": text = "Saving…"; break;
+      case "stale": text = "Can't reach the scoreboard yet. It keeps trying."; break;
+      case "offline": text = "Lost the connection to the scoreboard. Reload the page to reconnect."; break;
+      case "readonly": text = "View only right now."; break;
+      default: text = window.BOX_OFFICE_FIREBASE ? "Can't reach the scoreboard. Check your connection, then reload." : "The scoreboard isn't connected yet.";
+    }
+    el.dataset.s = s;
+    $("syncText").textContent = text;
+    const off = !canWrite();
+    $("clearBtn").disabled = off;
+    $("importBtn").disabled = off;
+  }
+
+  function ticketHTML(p, w) {
+    const e = entry(selected, p.id), any = hasAny(e), s = playerDay(selected, p.id);
+    const mine = p.id === me;
+    const topDay = w && !w.tie && w.winner.id === p.id;
+    const by = enteredBy(selected, p.id);
+    const d = parseISO(selected);
+    const serial = `No. ${pad(d.getMonth() + 1)}${pad(d.getDate())}·${p.ini}`;
+    const dis = canWrite() ? "" : " disabled";
+    const modes = MODES.map(m => {
+      const r = getResult(selected, p.id, m.id);
+      let read;
+      if (r === undefined) read = `<span class="mread dim">Not entered · −$2M</span>`;
+      else if (r === null) read = `<span class="mread t-fail">Fail · −$2M</span>`;
+      else read = `<span class="mread t-${TC[r]}">${TIER[r]} · +$${PTS[r]}M</span>`;
+      const btns = [1, 2, 3, 4, 5, 6, "F"].map(v => {
+        const on = v === "F" ? r === null : r === v;
+        const cls = on ? ` on f-${v === "F" ? "fail" : TC[v]}` : "";
+        const label = `${p.name}, ${m.name}: ${v === "F" ? "fail" : "solved on guess " + v}`;
+        return `<button type="button" class="sb${cls}" id="b-${p.id}-${m.id}-${v}" data-p="${p.id}" data-m="${m.id}" data-v="${v}" aria-pressed="${on}" aria-label="${label}"${dis}>${v === "F" ? "✕" : v}</button>`;
+      }).join("");
+      return `<div class="mode"><div class="mode-top"><span class="mname">${m.name}</span>${read}</div><div class="seg">${btns}</div></div>`;
+    }).join("");
+    const notes = [];
+    if (any && s.total < 0) notes.push("in the red");
+    if (by) notes.push("entered by " + NAME[by]);
+    return `<article class="ticket${mine ? " mine" : ""}" aria-label="${p.name}'s ticket">
+      <div class="stub">
+        <div class="stub-top"><span>Admit one</span>${topDay ? `<span class="stamp">★ No. 1 today</span>` : `<span>${serial}</span>`}</div>
+        <div class="stub-main">
+          <span class="pname">${p.name}${mine ? ` <span class="you">You</span>` : ""}</span>
+          <span class="ptotal${!any ? " empty" : s.total < 0 ? " neg" : ""}">${money(s.total)}</span>
+        </div>
+        <div class="stub-sub"><span>${any ? `${s.solved} of 4 solved` : "Nothing entered yet"}</span><span>${notes.join(" · ")}</span></div>
+      </div>
+      <div class="perf" aria-hidden="true"></div>
+      <div class="modes">${modes}</div>
+    </article>`;
+  }
+
+  function renderTickets() {
+    const touched = dayTouched(selected);
+    const w = touched ? dayWinner(selected) : null;
+    const order = me ? [PLAYERS.find(p => p.id === me), ...PLAYERS.filter(p => p.id !== me)] : PLAYERS;
+    $("tickets").innerHTML = order.map(p => ticketHTML(p, w)).join("");
+    $("tickets").setAttribute("aria-busy", loaded || conn === "nodb" ? "false" : "true");
+    const el = $("winner");
+    if (!w) {
+      el.innerHTML = `<span class="dim">No scores for ${longDay(selected)} yet. Tap the guess you solved on for each mode.</span>`;
+    } else if (w.tie) {
+      el.innerHTML = `<b>Dead heat:</b> ${w.tied.map(x => x.name).join(" & ")} at ${money(w.tied[0].total)} <span class="dim">(same modes solved, same best mode)</span>`;
+    } else {
+      el.innerHTML = `<b>${w.winner.name}</b> tops the box office at <b>${money(w.winner.total)}</b> <span class="dim">(${w.why})</span>`;
     }
   }
 
   function renderWeek() {
-    var mon = mondayOf(selected);
-    var fri = addDays(mon, 4);
-    $("weekLabel").textContent = shortDate(mon) + " – " + shortDate(fri);
-
-    var wt = weekTotals(mon);
-    var ranked = PLAYERS.map(function (pl) {
-      return { id: pl.id, name: pl.name, total: wt.totals[pl.id] };
-    }).sort(function (a, b) { return b.total - a.total; });
-
-    var host = $("standings");
-    host.innerHTML = "";
-    var ords = ["1st", "2nd", "3rd"];
-    ranked.forEach(function (p, i) {
-      var isLead = wt.days > 0 && i === 0 && p.total > ranked[1].total;
-      var card = document.createElement("div");
-      card.className = "scard" + (isLead ? " lead" : "");
-      var tied = i > 0 && p.total === ranked[i - 1].total;
-      card.innerHTML =
-        '<span class="rank">' + (wt.days === 0 ? "—" : (tied ? "T-" + ords[i - 1] : ords[i])) + "</span>" +
-        "<span><span class=\"sname\">" + p.name + "</span><br>" +
-        '<span class="sstat">' + (isLead ? "holding the title 👑" : "&nbsp;") + "</span></span>" +
-        '<span class="stotal' + (p.total < 0 ? " neg" : "") + '">' + money(p.total) + "</span>";
-      host.appendChild(card);
+    const mon = mondayOf(selected), days = weekDays(mon), wt = weekTotals(mon);
+    const lastWt = weekTotals(addDays(mon, -7));
+    const tw = rankLabels(wt.totals), lw = rankLabels(lastWt.totals);
+    $("weekSub").textContent = `Monday to Friday · ${weekRange(mon)}`;
+    const wins = {}, dayW = {};
+    PLAYERS.forEach(p => { wins[p.id] = 0; });
+    days.forEach(iso => {
+      if (!dayTouched(iso)) return;
+      const w = dayWinner(iso);
+      dayW[iso] = w;
+      if (!w.tie) wins[w.winner.id]++;
     });
-
-    var tb = $("weekTable").querySelector("tbody");
-    tb.innerHTML = "";
-    weekDays(mon).forEach(function (iso) {
-      var tr = document.createElement("tr");
-      tr.className = "clickable" + (iso === selected ? " today" : "");
-      tr.tabIndex = 0;
-      var d = parseISO(iso);
-      var cells = '<td>' + DOW[d.getDay()] + " " + d.getDate() + "</td>";
-      if (dayTouched(iso)) {
-        var w = dayWinner(iso);
-        PLAYERS.forEach(function (pl) {
-          var t = playerDay(iso, pl.id).total;
-          var isWin = !w.tie && w.winner.id === pl.id;
-          cells += '<td class="' + (isWin ? "win" : "") + '">' + money(t) + "</td>";
-        });
-        cells += '<td class="dim">' + (w.tie ? "tie" : "👑 " + w.winner.name) + "</td>";
-      } else {
-        cells += '<td class="dim">–</td><td class="dim">–</td><td class="dim">–</td><td class="dim"></td>';
-      }
-      tr.innerHTML = cells;
-      var go = function () { selected = iso; render(); };
-      tr.addEventListener("click", go);
-      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
-      tb.appendChild(tr);
-    });
+    const head = days.map(iso => {
+      const d = parseISO(iso);
+      return `<th class="${iso === selected ? "sel" : ""}"><button type="button" class="thb" id="day-${iso}" data-day="${iso}" aria-label="Show ${longDay(iso)}">${DOW[d.getDay()]} ${d.getDate()}</button></th>`;
+    }).join("");
+    $("weekTable").querySelector("thead").innerHTML =
+      `<tr><th class="l" title="This week's rank">TW</th><th class="l" title="Last week's rank">LW</th><th class="l">Player</th>${head}<th>Gross</th><th>Days won</th></tr>`;
+    const ranked = PLAYERS.slice().sort((a, b) => wt.totals[b.id] - wt.totals[a.id]);
+    const best = Math.max(...PLAYERS.map(p => wt.totals[p.id]));
+    const soleLead = PLAYERS.filter(p => wt.totals[p.id] === best).length === 1;
+    $("weekTable").querySelector("tbody").innerHTML = ranked.map(p => {
+      const lead = wt.days && soleLead && wt.totals[p.id] === best;
+      const cells = days.map(iso => {
+        const sel = iso === selected ? " sel" : "";
+        if (!dayW[iso]) return `<td class="dim${sel}">–</td>`;
+        const t = playerDay(iso, p.id).total;
+        const won = !dayW[iso].tie && dayW[iso].winner.id === p.id;
+        return `<td class="${won ? "won" : t < 0 ? "neg" : ""}${sel}">${won ? "★ " : ""}${money(t)}</td>`;
+      }).join("");
+      const g = wt.totals[p.id];
+      return `<tr class="${lead ? "lead" : ""}">
+        <td class="l rank">${wt.days ? tw[p.id] : "–"}</td>
+        <td class="l lw">${lastWt.days ? lw[p.id] : "–"}</td>
+        <td class="l who">${p.name}</td>${cells}
+        <td class="gross${g < 0 ? " neg" : ""}">${wt.days ? money(g) : "–"}</td>
+        <td>${wt.days ? wins[p.id] : "–"}</td></tr>`;
+    }).join("");
+    const t = weekTitle(mon);
+    let note;
+    if (!wt.days) note = "No days on the books this week yet. ★ marks the day's winner once scores are in.";
+    else if (t.final) note = t.winner ? `Final. ${t.winner.name} takes the week with ${money(t.total)}.` : `Final. ${t.tied.map(x => x.name).join(" & ")} share the top at ${money(t.total)}, so no title this week.`;
+    else note = "★ marks each day's winner. The title goes to the top gross once Friday is over.";
+    $("weekNote").textContent = note;
   }
 
-  function renderAllTime() {
-    var days = Object.keys(data.days).filter(dayTouched).sort();
-    if (!days.length) { $("alltime").textContent = ""; return; }
-    var totals = {}, titles = {};
-    PLAYERS.forEach(function (pl) { totals[pl.id] = 0; titles[pl.id] = 0; });
-    var weeks = {};
-    days.forEach(function (iso) {
-      PLAYERS.forEach(function (pl) { totals[pl.id] += playerDay(iso, pl.id).total; });
-      weeks[mondayOf(iso)] = true;
-    });
-    Object.keys(weeks).forEach(function (mon) {
-      if (addDays(mon, 4) >= todayISO()) return; // a title is awarded once that week's Friday has passed
-      var wt = weekTotals(mon);
-      var best = -Infinity, winner = null, shared = false;
-      PLAYERS.forEach(function (pl) {
-        var t = wt.totals[pl.id];
-        if (t > best) { best = t; winner = pl.id; shared = false; }
-        else if (t === best) shared = true;
-      });
-      if (winner && !shared) titles[winner]++;
-    });
-    var parts = PLAYERS.map(function (pl) { return "<b>" + pl.name + "</b> " + money(totals[pl.id]); }).join(" · ");
-    var tparts = PLAYERS.filter(function (pl) { return titles[pl.id] > 0; })
-      .map(function (pl) { return pl.name + " 👑×" + titles[pl.id]; }).join(" · ");
-    $("alltime").innerHTML = "All-time (" + days.length + (days.length === 1 ? " day" : " days") + "): " + parts +
-      (tparts ? " &nbsp;·&nbsp; Weekly titles: " + tparts : "");
-  }
-
-  function render() {
-    var d = parseISO(selected);
-    $("datePick").value = selected;
-    $("dayLabel").textContent = DOW[d.getDay()] + " " + shortDate(selected);
-    renderPlayers();
-    renderWinner();
-    renderWeek();
-    renderAllTime();
-    $("repoNote").textContent = repoInfo
-      ? "Shared scoreboard: " + repoInfo.days + (repoInfo.days === 1 ? " day" : " days") +
-        " loaded from the repo" + (repoInfo.updated ? " (published " + repoInfo.updated.slice(0, 10) + ")" : "") +
-        ". Publish pushes this device's entries live for everyone."
-      : "";
-  }
-
-  // ----- shared scoreboard: data.json committed in the repo is the source of truth. -----
-  // Days it contains overwrite local copies of the same day; unpublished local days survive.
-  var repoInfo = null;
-  function applyRemote(remote) {
-    if (!remote || typeof remote.days !== "object") return;
-    Object.keys(remote.days).forEach(function (iso) { data.days[iso] = remote.days[iso]; });
-    repoInfo = { days: Object.keys(remote.days).length, updated: remote.updated || null };
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
-    render();
-  }
-  try {
-    fetch("data.json", { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(applyRemote)
-      .catch(function () {}); // no data.json (or offline): local storage still works
-  } catch (e) {}
-
-  var tickTimer = null;
-  function flashTick(msg, ms) {
-    var el = $("saveTick");
-    el.textContent = msg;
-    clearTimeout(tickTimer);
-    tickTimer = setTimeout(function () { el.textContent = ""; }, ms || 1600);
-  }
-
-  // ----- publishing: commits data.json to the repo via the GitHub API. -----
-  // The token is stored only in this browser (never in the page or the repo);
-  // devices without a token are read-only viewers of the shared scoreboard.
-  var TOKEN_KEY = "gold-or-grave-token";
-  var API_URL = "https://api.github.com/repos/binguish/gold-or-grave/contents/data.json";
-  function ghHeaders(token) {
-    return { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json" };
-  }
-  function getToken(interactive) {
-    var t = null;
-    try { t = localStorage.getItem(TOKEN_KEY); } catch (e) {}
-    if (!t && interactive) {
-      t = window.prompt(
-        "Paste a GitHub token to publish scores from this device.\n\n" +
-        "Create one at github.com/settings/personal-access-tokens → Generate new token (fine-grained):\n" +
-        "  · Repository access: Only select repositories → binguish/gold-or-grave\n" +
-        "  · Repository permissions → Contents → Read and write\n\n" +
-        "The token is saved only in this browser. After that, edits auto-publish.");
-      if (t) { t = t.trim(); try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {} }
+  function renderLifetime() {
+    const dates = allDates().filter(dayTouched).sort();
+    const tb = $("lifeTable").querySelector("tbody");
+    if (!dates.length) {
+      $("lifeSub").textContent = "Starts with the first day on the board";
+      tb.innerHTML = `<tr><td class="l dim" colspan="7">${loaded ? "Nothing on the books yet. Tap a guess on today's ticket to open the run." : "Waiting for the scoreboard…"}</td></tr>`;
+      return;
     }
-    return t;
+    const st = {};
+    PLAYERS.forEach(p => { st[p.id] = { gross: 0, titles: 0, golds: 0, fails: 0, best: null, days: 0 }; });
+    dates.forEach(iso => PLAYERS.forEach(p => {
+      const s = playerDay(iso, p.id), x = st[p.id];
+      x.gross += s.total;
+      if (x.best === null || s.total > x.best) x.best = s.total;
+      if (hasAny(entry(iso, p.id))) x.days++;
+      MODES.forEach(m => {
+        const r = getResult(iso, p.id, m.id);
+        if (r === 1) x.golds++;
+        if (PTS[r] === undefined) x.fails++;
+      });
+    }));
+    [...new Set(dates.map(mondayOf))].forEach(mon => {
+      const t = weekTitle(mon);
+      if (t.final && t.winner) st[t.winner.id].titles++;
+    });
+    $("lifeSub").textContent = `${dates.length} ${dates.length === 1 ? "day" : "days"} on the books since ${shortDate(dates[0])}, ${dates[0].slice(0, 4)}`;
+    tb.innerHTML = PLAYERS.slice().sort((a, b) => st[b.id].gross - st[a.id].gross).map(p => {
+      const x = st[p.id];
+      return `<tr><td class="l who">${p.name}</td><td class="gross${x.gross < 0 ? " neg" : ""}">${money(x.gross)}</td>
+        <td>${x.titles}</td><td>${x.golds}</td><td>${x.fails}</td><td>${money(x.best)}</td><td>${x.days}</td></tr>`;
+    }).join("");
   }
-  function publish(interactive) {
-    var token = getToken(interactive);
-    if (!token) { if (interactive) flashTick("Publish canceled"); return; }
-    flashTick("Publishing…", 10000);
-    var body = JSON.stringify({ version: 2, updated: new Date().toISOString(), days: data.days }, null, 2);
-    fetch(API_URL, { headers: ghHeaders(token) })
-      .then(function (r) { return r.ok ? r.json() : {}; })
-      .then(function (cur) {
-        return fetch(API_URL, {
-          method: "PUT",
-          headers: ghHeaders(token),
-          body: JSON.stringify({
-            message: "Update scores (" + todayISO() + ")",
-            content: btoa(unescape(encodeURIComponent(body))),
-            sha: cur.sha
-          })
-        });
-      })
-      .then(function (r) {
-        if (r.ok) {
-          repoInfo = { days: Object.keys(data.days).length, updated: new Date().toISOString() };
-          render();
-          flashTick("Published — live for everyone in ~1 min", 5000);
-        } else if (r.status === 401 || r.status === 403) {
-          try { localStorage.removeItem(TOKEN_KEY); } catch (e) {}
-          flashTick("Token rejected — hit Publish to enter a new one", 5000);
-        } else if (r.status === 409 || r.status === 422) {
-          flashTick("Publish conflict — reload the page and try again", 5000);
-        } else {
-          flashTick("Publish failed (HTTP " + r.status + ")", 5000);
-        }
-      })
-      .catch(function () { flashTick("Publish failed — check your connection", 5000); });
-  }
-  // Auto-publish: once a token is saved, edits push on their own shortly after you stop tapping.
-  var publishTimer = null;
-  function schedulePublish() {
-    if (!getToken(false)) return;
-    clearTimeout(publishTimer);
-    publishTimer = setTimeout(function () { publish(false); }, 120000);
+
+  // ----- toast -----
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.hidden = true; }, 3800);
   }
 
   // ----- recap for the group chat -----
   function buildRecap() {
-    var scores = {};
-    PLAYERS.forEach(function (pl) { scores[pl.id] = playerDay(selected, pl.id); });
-    var w = dayWinner(selected);
-    var lines = ["Framed " + chatDate(selected) + " — The Box Office"];
-    w.ranked.forEach(function (p) {
-      var parts = MODES.map(function (m) {
-        var pts = points(getResult(selected, p.id, m.id));
-        return moneySignedChat(pts);
-      });
-      var crown = (!w.tie && w.winner.id === p.id) ? " 👑" : "";
-      lines.push(p.name + ": " + parts.join(" ") + " = " + moneyChat(p.total) + crown);
+    const w = dayWinner(selected);
+    const lines = [`Framed ${chatDate(selected)} · The Box Office`];
+    w.ranked.forEach(p => {
+      const parts = MODES.map(m => moneySigned(points(getResult(selected, p.id, m.id))));
+      const crown = !w.tie && w.winner.id === p.id ? " 👑" : "";
+      lines.push(`${p.name}: ${parts.join(" ")} = ${moneyChat(p.total)}${crown}`);
     });
-    var mon = mondayOf(selected);
-    var wt = weekTotals(mon);
-    var wp = PLAYERS.map(function (pl) { return { name: pl.name, t: wt.totals[pl.id] }; })
-      .sort(function (a, b) { return b.t - a.t; })
-      .map(function (p) { return p.name + " " + moneyChat(p.t); }).join(" · ");
-    lines.push("Week so far: " + wp);
+    const wt = weekTotals(mondayOf(selected));
+    lines.push("Week so far: " + PLAYERS.slice().sort((a, b) => wt.totals[b.id] - wt.totals[a.id])
+      .map(p => `${p.name} ${moneyChat(wt.totals[p.id])}`).join(" · "));
     return lines.join("\n");
   }
-  function copyText(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(
-        function () { flashTick("Copied"); },
-        function () { window.prompt("Copy the recap:", text); }
-      );
-    } else {
-      window.prompt("Copy the recap:", text);
+
+  // ----- import from the old page's Export data -----
+  async function runImport() {
+    const msg = $("importMsg");
+    if (!canWrite()) { msg.textContent = "Connect to the scoreboard first."; return; }
+    let parsed;
+    try { parsed = JSON.parse($("importText").value.trim()); } catch (e) { parsed = null; }
+    if (!parsed || typeof parsed.days !== "object" || !parsed.days) {
+      msg.textContent = "That doesn't look like an export from The Box Office. Paste the whole thing, starting with {.";
+      return;
     }
+    $("importBtn").disabled = true;
+    let added = 0, kept = 0;
+    try {
+      for (const [date, players] of Object.entries(parsed.days)) {
+        if (!isDate(date) || !players || typeof players !== "object") continue;
+        for (const p of PLAYERS) {
+          const e = players[p.id];
+          if (!e || typeof e !== "object") continue;
+          const doc = { date, player: p.id, by: me || null, at: new Date().toISOString(), imported: true };
+          let n = 0;
+          MODES.forEach(m => {
+            if (!(m.id in e)) return;
+            const v = e[m.id];
+            if (v === null || PTS[v] !== undefined) { doc[m.id] = v; n++; }
+          });
+          if (!n) continue;
+          if (remote.has(keyOf(date, p.id)) || local.has(keyOf(date, p.id))) { kept++; continue; }
+          msg.textContent = `Importing… ${added} added`;
+          await db.collection(COLL).doc(keyOf(date, p.id)).set(doc);
+          added++;
+        }
+      }
+      msg.textContent = `Added ${added} player-${added === 1 ? "day" : "days"}.` + (kept ? ` Kept ${kept} that were already on the board.` : "");
+      if (added) $("importText").value = "";
+    } catch (e) {
+      msg.textContent = `Stopped after ${added} added. ` + (e && e.code === "invalid_argument"
+        ? "You don't have permission to save scores here."
+        : "The connection dropped or the scoreboard refused a row. Run the import again to pick up the rest.");
+    }
+    renderSync();
   }
 
   // ----- wiring -----
-  $("datePick").addEventListener("change", function () { if (this.value) { selected = this.value; render(); } });
-  $("prevDay").addEventListener("click", function () { selected = addDays(selected, -1); render(); });
-  $("nextDay").addEventListener("click", function () { selected = addDays(selected, 1); render(); });
-  $("todayBtn").addEventListener("click", function () { selected = todayISO(); render(); });
-  $("prevWeek").addEventListener("click", function () { selected = addDays(selected, -7); render(); });
-  $("nextWeek").addEventListener("click", function () { selected = addDays(selected, 7); render(); });
-  $("publishBtn").addEventListener("click", function () { publish(true); });
-  $("copyBtn").addEventListener("click", function () {
-    if (!dayTouched(selected)) { flashTick("Nothing to copy"); return; }
-    copyText(buildRecap());
+  $("tickets").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-v]");
+    if (!b || b.disabled) return;
+    const pid = b.dataset.p, mid = b.dataset.m, v = b.dataset.v;
+    const val = v === "F" ? null : Number(v);
+    const r = getResult(selected, pid, mid);
+    setResult(selected, pid, mid, r === val ? undefined : val); // tap the lit one again to clear it
   });
-  $("clearBtn").addEventListener("click", function () {
-    if (!dayTouched(selected)) return;
-    if (window.confirm("Clear all results for " + shortDate(selected) + "?")) {
-      delete data.days[selected];
-      saveData();
-      render();
-    }
+  $("seat").addEventListener("click", ev => {
+    if (ev.target.id === "seatChange") { changingSeat = true; renderSeat(); const f = $("seat-" + me); if (f) f.focus(); return; }
+    const b = ev.target.closest("button[data-seat]");
+    if (!b) return;
+    me = b.dataset.seat;
+    changingSeat = false;
+    lsSet(ME_KEY, me);
+    render();
+    const c = $("seatChange"); if (c) c.focus();
   });
-  $("exportBtn").addEventListener("click", function () { copyText(JSON.stringify(data)); });
-  $("importBtn").addEventListener("click", function () {
-    var raw = window.prompt("Paste exported data (this replaces what's on this device):");
-    if (!raw) return;
+  $("weekTable").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-day]");
+    if (b) { selected = b.dataset.day; render(); }
+  });
+  $("datePick").addEventListener("change", e => { if (isDate(e.target.value)) { selected = e.target.value; render(); } });
+  $("prevDay").addEventListener("click", () => { selected = addDays(selected, -1); render(); });
+  $("nextDay").addEventListener("click", () => { selected = addDays(selected, 1); render(); });
+  $("todayBtn").addEventListener("click", () => { selected = todayISO(); render(); });
+  $("prevWeek").addEventListener("click", () => { selected = addDays(selected, -7); render(); });
+  $("nextWeek").addEventListener("click", () => { selected = addDays(selected, 7); render(); });
+
+  $("copyBtn").addEventListener("click", () => {
+    if (!dayTouched(selected)) { toast("Nothing to copy for this day yet."); return; }
+    const text = buildRecap(), out = $("recapOut");
+    const fallback = () => { out.hidden = false; out.value = text; out.focus(); out.select(); toast("Copy the recap from the box below the tickets."); };
     try {
-      var d = JSON.parse(raw);
-      if (!d || typeof d.days !== "object") throw new Error("bad shape");
-      data = { version: 2, days: d.days };
-      saveData();
-      render();
-    } catch (e) { window.alert("That didn't look like an export from The Box Office."); }
+      navigator.clipboard.writeText(text).then(() => { out.hidden = true; toast("Recap copied. Paste it in the group chat."); }, fallback);
+    } catch (e) { fallback(); }
   });
+  function closeConfirm() { $("confirm").hidden = true; $("actions").hidden = false; }
+  $("clearBtn").addEventListener("click", () => {
+    if (!dayTouched(selected)) { toast("There's nothing to clear on this day."); return; }
+    $("confirmText").textContent = `Clear every score for ${longDay(selected)}? Everyone loses them.`;
+    $("actions").hidden = true;
+    $("confirm").hidden = false;
+    $("confirmNo").focus();
+  });
+  $("confirmNo").addEventListener("click", () => { closeConfirm(); $("clearBtn").focus(); });
+  $("confirmYes").addEventListener("click", () => {
+    if (!canWrite()) { closeConfirm(); return; }
+    PLAYERS.forEach(p => {
+      if (!entry(selected, p.id)) return;
+      local.set(keyOf(selected, p.id), {});
+      scheduleWrite(keyOf(selected, p.id), 0);
+    });
+    closeConfirm();
+    render();
+    toast(`Cleared ${longDay(selected)}.`);
+  });
+  $("importBtn").addEventListener("click", runImport);
+
+  // ----- connect to the shared scoreboard -----
+  function subscribe() {
+    const timer = setTimeout(() => { if (!loaded) { conn = "stale"; renderSync(); } }, 10000);
+    db.collection(COLL).onSnapshot(snap => {
+      remote.clear();
+      snap.docs.forEach(d => {
+        const v = d.data();
+        if (!v || !isDate(v.date) || !NAME[v.player]) return;
+        const modes = {};
+        MODES.forEach(m => {
+          if (!(m.id in v)) return;
+          modes[m.id] = (v[m.id] === null || PTS[v[m.id]] !== undefined) ? v[m.id] : null;
+        });
+        remote.set(keyOf(v.date, v.player), { date: v.date, player: v.player, modes, by: v.by || null });
+      });
+      if (!snap.metadata.fromCache && !loaded) {
+        clearTimeout(timer);
+        loaded = true;
+        conn = readOnly ? "readonly" : "live";
+      } else if (!snap.metadata.fromCache && conn === "stale") {
+        conn = readOnly ? "readonly" : "live";
+      }
+      render();
+    }, () => {
+      clearTimeout(timer);
+      conn = "offline";
+      render();
+    });
+  }
+
+  // ----- Firebase Firestore: the shared scoreboard. Same shape as before: scores/<date>_<player> -----
+  const FB = "https://www.gstatic.com/firebasejs/10.12.2/";
+  async function connect(config) {
+    const [appMod, fs] = await Promise.all([import(FB + "firebase-app.js"), import(FB + "firebase-firestore.js")]);
+    const store = fs.getFirestore(appMod.initializeApp(config));
+    const code = e => {
+      const c = e && e.code;
+      return { code: c === "unavailable" ? "unavailable" : c === "resource-exhausted" ? "quota_exceeded" : "rejected", message: e && e.message };
+    };
+    return {
+      collection: name => ({
+        doc: id => ({
+          set: data => fs.setDoc(fs.doc(store, name, id), data).catch(e => { throw code(e); }),
+          delete: () => fs.deleteDoc(fs.doc(store, name, id)).catch(e => { throw code(e); })
+        }),
+        onSnapshot: (next, err) => fs.onSnapshot(
+          fs.collection(store, name),
+          snap => next({ docs: snap.docs.map(d => ({ id: d.id, data: () => d.data() })), metadata: { fromCache: snap.metadata.fromCache } }),
+          e => err(code(e))
+        )
+      })
+    };
+  }
+
+  async function boot() {
+    const config = window.BOX_OFFICE_FIREBASE;
+    if (!config) { conn = "nodb"; render(); return; }
+    try { db = await connect(config); } catch (e) { db = null; }
+    if (!db) { conn = "nodb"; render(); return; }
+    subscribe();
+    render();
+  }
 
   render();
+  boot();
 })();
 </script>
+
+<script>
+(() => {
+  // Film print on the title card: moving grain, exposure flicker, gate weave, one-frame dust blips,
+  // hairs caught in the gate, and scratches that run down the reel. Two canvases at about 18 fps.
+  const card = document.querySelector(".card");
+  if (!card) return;
+  const reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const mk = cls => {
+    const c = document.createElement("canvas");
+    c.className = "film " + cls;
+    c.setAttribute("aria-hidden", "true");
+    card.appendChild(c);
+    return c;
+  };
+  const gcv = mk("grain"), dcv = mk("debris");
+  const g = gcv.getContext("2d"), d = dcv.getContext("2d");
+  const wear = { grain: .21, dust: .45, hair: 1, scratch: 1, flicker: .05, jolt: .005 };
+
+  let W = 0, H = 0, dpr = 1;
+  function size() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = card.clientWidth; H = card.clientHeight;
+    [gcv, dcv].forEach(c => { c.width = Math.max(1, Math.round(W * dpr)); c.height = Math.max(1, Math.round(H * dpr)); });
+    if (reduce) draw(true);
+  }
+
+  // pre-rendered grain tiles, picked at random each frame. Low-contrast noise, softened with a
+  // small blur so it clumps like film grain instead of sparkling like TV static.
+  const T = 160;
+  const pats = Array.from({ length: 6 }, () => {
+    const raw = document.createElement("canvas");
+    raw.width = raw.height = T;
+    const r = raw.getContext("2d"), img = r.createImageData(T, T);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = 128 + (Math.random() + Math.random() + Math.random() - 1.5) * 80;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = 255;
+    }
+    r.putImageData(img, 0, 0);
+    // blur a 3x3 repeat and keep the middle, so the tile still wraps without seams
+    const big = document.createElement("canvas");
+    big.width = big.height = T * 3;
+    const b = big.getContext("2d");
+    b.filter = "blur(0.75px)";
+    for (let ix = 0; ix < 3; ix++) for (let iy = 0; iy < 3; iy++) b.drawImage(raw, ix * T, iy * T);
+    const tile = document.createElement("canvas");
+    tile.width = tile.height = T;
+    tile.getContext("2d").drawImage(big, T, T, T, T, 0, 0, T, T);
+    return g.createPattern(tile, "repeat");
+  });
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  let hairs = [], scratches = [], frame = 0, nextHair = 24, nextScratch = 40;
+  function spawnHair() {
+    const gate = Math.random() < .35; // caught at the gate edge: hangs around longer
+    let x, y;
+    if (gate) {
+      const e = Math.floor(Math.random() * 4);
+      x = e === 0 ? rnd(0, 30) : e === 1 ? W - rnd(0, 30) : rnd(0, W);
+      y = e === 2 ? rnd(0, 26) : e === 3 ? H - rnd(0, 26) : rnd(0, H);
+    } else {
+      x = rnd(W * .08, W * .92); y = rnd(H * .08, H * .92);
+    }
+    const len = rnd(30, gate ? 200 : 120), n = 16, step = len / n;
+    const curl = rnd(-.5, .5), wob = rnd(.04, .22);
+    let a = rnd(0, Math.PI * 2), px = 0, py = 0;
+    const pts = [[0, 0]];
+    for (let i = 1; i <= n; i++) {
+      a += curl / n * 4 + Math.sin(i * 1.3) * wob;
+      px += Math.cos(a) * step; py += Math.sin(a) * step;
+      pts.push([px, py]);
+    }
+    hairs.push({ x, y, pts, w: rnd(.7, 1.5), alpha: rnd(.55, .85), life: gate ? Math.round(rnd(18, 60)) : Math.round(rnd(2, 6)) });
+  }
+  function spawnScratch() {
+    scratches.push({ x: rnd(W * .05, W * .95), drift: rnd(-.7, .7), life: Math.round(rnd(8, 45)), light: Math.random() < .7, w: rnd(.6, 1.4) });
+  }
+
+  function draw(still) {
+    if (!W || !H) return;
+    frame++;
+    // grain
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, gcv.width, gcv.height);
+    g.globalAlpha = wear.grain;
+    const s = dpr * 1.4;
+    g.setTransform(s, 0, 0, s, -rnd(0, T) * s, -rnd(0, T) * s);
+    g.fillStyle = pats[Math.floor(Math.random() * pats.length)];
+    g.fillRect(0, 0, W / 1.4 + 2 * T, H / 1.4 + 2 * T);
+
+    d.setTransform(1, 0, 0, 1, 0, 0);
+    d.clearRect(0, 0, dcv.width, dcv.height);
+    if (still) return;
+    d.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // exposure flicker
+    const f = (Math.random() - .5) * 2 * wear.flicker;
+    d.fillStyle = f > 0 ? `rgba(255,255,255,${(f * .6).toFixed(3)})` : `rgba(0,0,0,${(-f).toFixed(3)})`;
+    d.fillRect(0, 0, W, H);
+
+    // dust blips: specks that last a single frame
+    const count = Math.random() < wear.dust ? 1 + Math.floor(Math.random() * 3 * wear.dust * 2) : 0;
+    for (let i = 0; i < count; i++) {
+      const big = Math.random() < .08, r = big ? rnd(2.5, 5) : rnd(.6, 2);
+      d.fillStyle = Math.random() < .55 ? `rgba(255,255,255,${rnd(.55, .9).toFixed(2)})` : `rgba(0,0,0,${rnd(.5, .85).toFixed(2)})`;
+      const x = rnd(0, W), y = rnd(0, H);
+      for (let k = 0; k < (big ? 4 : 2); k++) {
+        d.beginPath();
+        d.ellipse(x + rnd(-r, r) * .6, y + rnd(-r, r) * .6, r * rnd(.5, 1), r * rnd(.3, .9), rnd(0, Math.PI), 0, Math.PI * 2);
+        d.fill();
+      }
+    }
+
+    // hairs: twitch a pixel or two each frame while they're in the gate
+    if (frame >= nextHair) { spawnHair(); nextHair = frame + Math.round(rnd(30, 110) / wear.hair); }
+    d.lineCap = "round"; d.lineJoin = "round";
+    hairs.forEach(h => {
+      const jx = rnd(-1.2, 1.2), jy = rnd(-1.2, 1.2);
+      d.strokeStyle = `rgba(0,0,0,${h.alpha.toFixed(2)})`;
+      d.lineWidth = h.w;
+      d.beginPath();
+      h.pts.forEach(([px, py], i) => { const X = h.x + px + jx, Y = h.y + py + jy; if (i) d.lineTo(X, Y); else d.moveTo(X, Y); });
+      d.stroke();
+      h.life--;
+    });
+    hairs = hairs.filter(h => h.life > 0);
+
+    // scratches running down the print, broken and drifting
+    if (frame >= nextScratch) { spawnScratch(); nextScratch = frame + Math.round(rnd(40, 140) / wear.scratch); }
+    scratches.forEach(sc => {
+      sc.x += sc.drift + rnd(-.4, .4);
+      if (Math.random() < .85) {
+        d.fillStyle = sc.light ? `rgba(255,255,255,${rnd(.18, .4).toFixed(2)})` : `rgba(0,0,0,${rnd(.25, .45).toFixed(2)})`;
+        let y = rnd(-40, 0);
+        while (y < H) {
+          const seg = rnd(40, 220);
+          d.fillRect(sc.x, y, sc.w, seg);
+          y += seg + (Math.random() < .3 ? rnd(4, 30) : 0);
+        }
+      }
+      sc.life--;
+    });
+    scratches = scratches.filter(sc => sc.life > 0);
+
+    // gate weave, with the odd splice jolt
+    if (Math.random() < wear.jolt) card.style.transform = `translate(0, ${rnd(2, 4).toFixed(1)}px)`;
+    else if (frame % 4 === 0) card.style.transform = `translate(${rnd(-.7, .7).toFixed(2)}px, ${rnd(-.9, .9).toFixed(2)}px)`;
+  }
+
+  let running = false, onScreen = true, last = 0;
+  function loop(t) {
+    if (!running) return;
+    if (t - last > 55) { last = t; draw(false); }
+    requestAnimationFrame(loop);
+  }
+  function sync() {
+    const go = !reduce && onScreen && !document.hidden;
+    if (go && !running) { running = true; requestAnimationFrame(loop); }
+    if (!go) running = false;
+  }
+  size();
+  try { new ResizeObserver(size).observe(card); } catch (e) { window.addEventListener("resize", size); }
+  try { new IntersectionObserver(es => { onScreen = es[0].isIntersecting; sync(); }).observe(card); } catch (e) { /* keep running */ }
+  document.addEventListener("visibilitychange", sync);
+  if (reduce) draw(true); else sync();
+})();
+</script>
+</body>
 </html>
