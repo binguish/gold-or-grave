@@ -200,6 +200,24 @@
     cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
   }
 
+  /* ---------- play here: Framed full width in a film gate ---------- */
+  .screen { background: #000; border-radius: 18px; padding: 10px; }
+  .mode-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 4px 4px 10px; }
+  .tab {
+    font: 600 12px/1 var(--f-ui); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px;
+    padding: 9px 12px; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+  /* The game scrolls inside its frame. Where the OS shows a permanent scrollbar, the frame is made
+     that much wider and the gate clips it off, so scrolling still works but no bar shows. */
+  .gate { overflow: hidden; border-radius: 26px / 20px; background: #111; }
+  .gate iframe {
+    display: block; width: calc(100% + var(--sbw, 0px)); height: min(82vh, 860px);
+    border: 0; background: #111;
+  }
+  .caveat { font-size: 12.5px; color: var(--muted); margin-top: 10px; text-align: center; }
+
   /* ---------- seat + sync bar ---------- */
   .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 16px; }
   .seat { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
@@ -427,6 +445,28 @@
       </div>
     </div>
   </header>
+
+  <section aria-labelledby="playTitle">
+    <div class="sec-head">
+      <div>
+        <h2 id="playTitle">Play here</h2>
+        <p class="sub">Framed, right inside the Box Office</p>
+      </div>
+      <div class="controls"><button type="button" class="btn ghost" id="playToggle" aria-expanded="true" aria-controls="playBody">Hide the game</button></div>
+    </div>
+    <div id="playBody">
+      <div class="screen">
+        <div class="mode-tabs" role="tablist" aria-label="Framed modes">
+          <button type="button" role="tab" class="tab" id="tab-framed" data-src="https://framed.wtf/" aria-selected="true">Framed</button>
+          <button type="button" role="tab" class="tab" id="tab-oneframe" data-src="https://framed.wtf/one-frame" aria-selected="false">One Frame</button>
+          <button type="button" role="tab" class="tab" id="tab-title" data-src="https://framed.wtf/titleshot" aria-selected="false">Title Shot</button>
+          <button type="button" role="tab" class="tab" id="tab-poster" data-src="https://framed.wtf/poster" aria-selected="false">Poster</button>
+        </div>
+        <div class="gate"><iframe id="game" src="https://framed.wtf/" title="Framed"></iframe></div>
+      </div>
+      <p class="caveat">This copy of Framed keeps its own save, separate from framed.wtf. Play each day's round here or there, not both.</p>
+    </div>
+  </section>
 
   <section aria-labelledby="dayTitle">
     <div class="sec-head">
@@ -994,6 +1034,25 @@
   }
 
   // ----- wiring -----
+  // width of this device's always-on scrollbar (0 where scrollbars overlay, like phones and most Macs)
+  (() => {
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:absolute;top:-9999px;width:100px;height:100px;overflow:scroll";
+    document.body.appendChild(probe);
+    document.documentElement.style.setProperty("--sbw", (probe.offsetWidth - probe.clientWidth) + "px");
+    probe.remove();
+  })();
+  document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+    $("game").src = t.dataset.src;
+  }));
+  $("playToggle").addEventListener("click", () => {
+    const open = $("playBody").hidden;
+    $("playBody").hidden = !open;
+    $("playToggle").setAttribute("aria-expanded", String(open));
+    $("playToggle").textContent = open ? "Hide the game" : "Show the game";
+  });
+
   $("tickets").addEventListener("click", ev => {
     const b = ev.target.closest("button[data-v]");
     if (!b || b.disabled) return;
